@@ -1046,4 +1046,268 @@ body.printing-template .template-card.print-focus {
     border: 1px solid #000;
     color: #000;
   }
+
+  #evidence .evidence-cell-text {
+    display: block;
+    overflow: visible;
+    -webkit-line-clamp: unset;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  #evidence .evidence-cell-btn {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: default;
+    text-align: left;
+    width: 100%;
+  }
+
+  #evidence .evidence-actions,
+  #evidence .operation-column,
+  #evidence .evidence-attach-hint,
+  #evidence .evidence-scroll-hint {
+    display: none !important;
+  }
+
+  #evidence .evidence-table {
+    min-width: auto;
+    table-layout: auto;
+  }
+
+  #evidence .evidence-table-wrap {
+    overflow: visible;
+    border: 0;
+  }
+}
+
+/* —— #evidence 证据目录（仅此模块） —— */
+#evidence {
+  overflow: hidden;
+}
+
+#evidence .evidence-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  -webkit-overflow-scrolling: touch;
+}
+
+#evidence .evidence-table {
+  width: 100%;
+  min-width: 1040px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  background: var(--paper);
+}
+
+#evidence .evidence-table .col-no {
+  width: 80px;
+}
+
+#evidence .evidence-table .col-name {
+  width: 180px;
+}
+
+#evidence .evidence-table .col-source {
+  width: 180px;
+}
+
+#evidence .evidence-table .col-purpose {
+  width: 240px;
+}
+
+#evidence .evidence-table .col-pages {
+  width: 100px;
+}
+
+#evidence .evidence-table .col-status {
+  width: 140px;
+}
+
+#evidence .evidence-table .col-actions {
+  width: 120px;
+}
+
+#evidence .evidence-table td {
+  vertical-align: top;
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+#evidence .evidence-table th {
+  padding: 10px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--line);
+}
+
+#evidence .evidence-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+#evidence .evidence-cell-btn {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+#evidence .evidence-cell-btn:hover .evidence-cell-text {
+  color: var(--primary);
+}
+
+#evidence .evidence-cell-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+#evidence .evidence-cell-text.is-empty {
+  color: var(--muted);
+  font-style: italic;
+}
+
+#evidence .evidence-purpose-cell .evidence-cell-text {
+  max-width: 100%;
+}
+
+#evidence .evidence-cell-plain {
+  display: block;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+#evidence .evidence-attach-hint {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+#evidence .evidence-status-tag {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#evidence .evidence-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+#evidence .evidence-action-btn {
+  min-height: 30px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+#evidence .evidence-scroll-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  #evidence .evidence-scroll-hint {
+    display: none;
+  }
+}
+
+#evidence .evidence-detail-body {
+  display: grid;
+  gap: 12px;
+}
+
+#evidence .evidence-detail-row {
+  display: grid;
+  gap: 4px;
+}
+
+#evidence .evidence-detail-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+#evidence .evidence-detail-value {
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#evidence .evidence-detail-footer {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+#evidence .evidence-edit-panel {
+  width: min(640px, 100%);
+}
+
+#evidence .evidence-edit-form {
+  display: grid;
+  gap: 12px;
+}
+
+#evidence .evidence-edit-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+#evidence .evidence-edit-form input,
+#evidence .evidence-edit-form textarea {
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  background: var(--paper);
+}
+
+#evidence .evidence-edit-attachment {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+#evidence .evidence-edit-attachment-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+#evidence .evidence-edit-attachment-info {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+#evidence .evidence-edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 4px;
 }

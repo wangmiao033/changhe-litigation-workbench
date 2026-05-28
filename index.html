@@ -136,8 +136,17 @@
           </div>
         </div>
         <div id="evidenceEmpty" class="empty-guide no-print" hidden></div>
-        <div class="table-wrap" id="evidenceTableWrap">
-          <table>
+        <div class="evidence-table-wrap" id="evidenceTableWrap">
+          <table class="evidence-table">
+            <colgroup>
+              <col class="col-no" />
+              <col class="col-name" />
+              <col class="col-source" />
+              <col class="col-purpose" />
+              <col class="col-pages" />
+              <col class="col-status" />
+              <col class="col-actions" />
+            </colgroup>
             <thead>
               <tr>
                 <th>编号</th>
@@ -146,11 +155,56 @@
                 <th>证明目的</th>
                 <th>页码</th>
                 <th>状态</th>
-                <th class="no-print">操作</th>
+                <th class="operation-column no-print">操作</th>
               </tr>
             </thead>
             <tbody id="evidenceBody"></tbody>
           </table>
+        </div>
+        <p class="evidence-scroll-hint no-print" id="evidenceScrollHint">可左右滑动查看完整证据目录</p>
+
+        <div id="evidenceDetailModal" class="modal evidence-modal no-print" hidden>
+          <div class="modal-backdrop" data-close-evidence-modal></div>
+          <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="evidenceDetailTitle">
+            <div class="modal-head">
+              <h3 id="evidenceDetailTitle">证据详情</h3>
+              <button type="button" class="secondary" data-close-evidence-modal>关闭</button>
+            </div>
+            <div class="modal-body evidence-detail-body" id="evidenceDetailBody"></div>
+          </div>
+        </div>
+
+        <div id="evidenceEditModal" class="modal evidence-modal no-print" hidden>
+          <div class="modal-backdrop" data-close-evidence-modal></div>
+          <div class="modal-panel evidence-edit-panel" role="dialog" aria-modal="true" aria-labelledby="evidenceEditTitle">
+            <div class="modal-head">
+              <h3 id="evidenceEditTitle">编辑证据</h3>
+              <button type="button" class="secondary" data-close-evidence-modal>取消</button>
+            </div>
+            <form class="modal-body evidence-edit-form" id="evidenceEditForm">
+              <label>编号 <input name="no" id="evidenceEditNo" /></label>
+              <label>证据名称 <textarea name="name" id="evidenceEditName" rows="3"></textarea></label>
+              <label>来源/原件 <textarea name="source" id="evidenceEditSource" rows="3"></textarea></label>
+              <label>证明目的 <textarea name="purpose" id="evidenceEditPurpose" rows="4"></textarea></label>
+              <label>页码 <input name="pages" id="evidenceEditPages" /></label>
+              <label>状态 <input name="status" id="evidenceEditStatus" placeholder="如：未准备、已准备、需补充、已打印" /></label>
+              <label>备注/材料说明 <textarea name="notes" id="evidenceEditNotes" rows="3" placeholder="补充说明、核对要点等"></textarea></label>
+              <div class="evidence-edit-attachment no-print">
+                <span class="evidence-edit-attachment-label">附件</span>
+                <div id="evidenceEditAttachmentInfo" class="evidence-edit-attachment-info"></div>
+                <label class="upload-link">
+                  上传或更换附件
+                  <input type="file" accept="image/*,.pdf,application/pdf" id="evidenceEditFile" />
+                </label>
+                <button type="button" class="ghost" id="evidenceEditRemoveFile" hidden>移除附件</button>
+                <button type="button" class="ghost" id="evidenceEditPreviewFile" hidden>预览附件</button>
+              </div>
+              <div class="evidence-edit-actions no-print">
+                <button type="submit" class="primary">保存</button>
+                <button type="button" class="secondary" data-close-evidence-modal>取消</button>
+              </div>
+            </form>
+          </div>
         </div>
       </section>
 

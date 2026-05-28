@@ -157,6 +157,7 @@ function normalizeEvidence(item = {}) {
     purpose: item.purpose || "",
     pages: item.pages || "",
     status: normalizeEvidenceStatus(item.status),
+    notes: item.notes || "",
     fileName: item.fileName || "",
     fileMime: item.fileMime || "",
     fileData: item.fileData || "",
@@ -164,15 +165,38 @@ function normalizeEvidence(item = {}) {
 }
 
 function normalizeEvidenceStatus(status = "") {
+  const trimmed = String(status || "").trim();
+  if (!trimmed) return "未准备";
   const known = EVIDENCE_STATUSES.map((s) => s.value);
-  if (known.includes(status)) return status;
-  if (/打印|盖章/.test(status)) return "已打印";
-  if (/待|整理|核对/.test(status)) return "需补充";
-  return status.trim() || "未准备";
+  if (known.includes(trimmed)) return trimmed;
+  if (trimmed === "待打印并盖章") return "已打印";
+  if (trimmed === "待整理" || trimmed === "待核对原件") return "需补充";
+  return trimmed;
 }
 
 function evidenceStatusTone(status) {
-  return EVIDENCE_STATUSES.find((s) => s.value === status)?.tone || "pending";
+  const known = EVIDENCE_STATUSES.find((s) => s.value === status);
+  if (known) return known.tone;
+  if (/打印|盖章/.test(status)) return "printed";
+  if (/已准备|已完成/.test(status)) return "ready";
+  if (/待|核对|补充|需/.test(status)) return "need";
+  return "pending";
+}
+
+let editingEvidenceIndex = null;
+
+function evidenceSummaryText(value, emptyLabel = "未填写") {
+  const full = String(value ?? "").trim();
+  return {
+    full: full || emptyLabel,
+    display: full || emptyLabel,
+    isEmpty: !full,
+  };
+}
+
+function renderEvidenceCell(summary, extraClass = "") {
+  const cls = `evidence-cell-text ${extraClass}`.trim();
+  return `<span class="${cls}" title="${escapeAttr(summary.full)}">${escapeText(summary.display)}</span>`;
 }
 
 function saveState() {
@@ -285,61 +309,212 @@ function renderEvidence() {
   tbody.innerHTML = "";
   state.evidence.forEach((item, index) => {
     state.evidence[index] = normalizeEvidence(item);
-    const status = item.status;
+    const nameSum = evidenceSummaryText(item.name);
+    const sourceSum = evidenceSummaryText(item.source);
+    const purposeSum = evidenceSummaryText(item.purpose);
+    const status = item.status || "未准备";
     const tone = evidenceStatusTone(status);
-    const attachmentHtml = item.fileName
-      ? `<button type="button" class="file-chip" data-preview-evidence="${index}" title="点击预览">
-          <span>📎</span><span>${escapeText(item.fileName)}</span>
-        </button>
-        <button type="button" class="ghost icon-btn" data-remove-file="${index}" title="移除附件">移除</button>`
+    const pagesDisplay = item.pages?.trim() || "—";
+    const noDisplay = item.no?.trim() || "—";
+    const attachHint = item.fileName
+      ? `<span class="evidence-attach-hint no-print" title="${escapeAttr(item.fileName)}">📎 有附件</span>`
       : "";
-    const statusOptions = EVIDENCE_STATUSES.map(
-      (opt) =>
-        `<option value="${escapeAttr(opt.value)}" ${status === opt.value ? "selected" : ""}>${escapeText(opt.value)}</option>`,
-    ).join("");
 
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td><input aria-label="证据编号" data-key="no" value="${escapeAttr(item.no)}" /></td>
-      <td><textarea aria-label="证据名称" data-key="name">${escapeText(item.name)}</textarea></td>
-      <td class="source-cell">
-        <textarea aria-label="来源或原件" data-key="source">${escapeText(item.source)}</textarea>
-        <div class="attachment-row no-print">
-          ${attachmentHtml}
-          <label class="upload-link">
-            ${item.fileName ? "更换文件" : "上传附件"}
-            <input type="file" accept="image/*,.pdf,application/pdf" data-upload-evidence="${index}" />
-          </label>
-        </div>
+      <td class="col-no"><span class="evidence-cell-plain" title="${escapeAttr(noDisplay)}">${escapeText(noDisplay)}</span></td>
+      <td class="col-name">
+        <button type="button" class="evidence-cell-btn" data-view-evidence="${index}" aria-label="查看证据详情">
+          ${renderEvidenceCell(nameSum)}
+        </button>
       </td>
-      <td><textarea aria-label="证明目的" data-key="purpose">${escapeText(item.purpose)}</textarea></td>
-      <td><input aria-label="页码" data-key="pages" value="${escapeAttr(item.pages)}" /></td>
-      <td class="status-cell status-cell--${tone}">
-        <span class="tag tag-${tone} no-print">${escapeText(status)}</span>
-        <select class="status-select" aria-label="证据状态" data-key="status">${statusOptions}</select>
+      <td class="col-source evidence-source-cell">
+        <button type="button" class="evidence-cell-btn" data-view-evidence="${index}" aria-label="查看来源详情">
+          ${renderEvidenceCell(sourceSum)}${attachHint}
+        </button>
       </td>
-      <td class="no-print"><button type="button" class="delete-row" data-delete-evidence="${index}">删除</button></td>
+      <td class="col-purpose evidence-purpose-cell">
+        <button type="button" class="evidence-cell-btn" data-view-evidence="${index}" aria-label="查看证明目的">
+          ${renderEvidenceCell(purposeSum, purposeSum.isEmpty ? "is-empty" : "")}
+        </button>
+      </td>
+      <td class="col-pages"><span class="evidence-cell-plain" title="${escapeAttr(pagesDisplay)}">${escapeText(pagesDisplay)}</span></td>
+      <td class="col-status">
+        <span class="tag tag-${tone} evidence-status-tag" title="${escapeAttr(status)}">${escapeText(status)}</span>
+      </td>
+      <td class="operation-column evidence-actions no-print">
+        <button type="button" class="ghost evidence-action-btn" data-view-evidence="${index}">查看</button>
+        <button type="button" class="ghost evidence-action-btn" data-edit-evidence="${index}">编辑</button>
+        <button type="button" class="delete-row evidence-action-btn" data-delete-evidence="${index}">删除</button>
+      </td>
     `;
-    row.querySelectorAll("[data-key]").forEach((input) => {
-      const handler = () => {
-        state.evidence[index][input.dataset.key] = input.value;
-        if (input.dataset.key === "status") {
-          const cell = row.querySelector(".status-cell");
-          const tag = row.querySelector(".tag");
-          const newTone = evidenceStatusTone(input.value);
-          if (cell) cell.className = `status-cell status-cell--${newTone}`;
-          if (tag) {
-            tag.className = `tag tag-${newTone} no-print`;
-            tag.textContent = input.value;
-          }
-        }
-        saveState();
-      };
-      input.addEventListener("input", handler);
-      input.addEventListener("change", handler);
-    });
     tbody.appendChild(row);
   });
+}
+
+function openEvidenceDetail(index) {
+  const item = normalizeEvidence(state.evidence[index]);
+  if (!item) return;
+
+  const modal = document.querySelector("#evidenceDetailModal");
+  const body = document.querySelector("#evidenceDetailBody");
+  const title = document.querySelector("#evidenceDetailTitle");
+  if (!modal || !body) return;
+
+  if (title) title.textContent = item.no ? `证据详情 · ${item.no}` : "证据详情";
+
+  const fields = [
+    ["编号", item.no || "—"],
+    ["证据名称", item.name || "—"],
+    ["来源/原件", item.source || "—"],
+    ["证明目的", item.purpose || "未填写"],
+    ["页码", item.pages || "—"],
+    ["状态", item.status || "未准备"],
+    ["备注/材料说明", item.notes || "—"],
+  ];
+
+  body.innerHTML = fields
+    .map(
+      ([label, value]) => `
+    <div class="evidence-detail-row">
+      <div class="evidence-detail-label">${escapeText(label)}</div>
+      <div class="evidence-detail-value">${escapeText(value)}</div>
+    </div>`,
+    )
+    .join("");
+
+  if (item.fileName) {
+    const attach = document.createElement("div");
+    attach.className = "evidence-detail-row";
+    attach.innerHTML = `
+      <div class="evidence-detail-label">附件</div>
+      <div class="evidence-detail-value">
+        <button type="button" class="file-chip" data-preview-evidence="${index}">${escapeText(item.fileName)}</button>
+      </div>`;
+    body.appendChild(attach);
+  }
+
+  const footer = document.createElement("div");
+  footer.className = "evidence-detail-footer no-print";
+  footer.innerHTML = `<button type="button" class="secondary" data-edit-evidence="${index}">编辑本条</button>`;
+  body.appendChild(footer);
+
+  modal.hidden = false;
+  document.body.style.overflow = "hidden";
+}
+
+function closeEvidenceDetailModal() {
+  const modal = document.querySelector("#evidenceDetailModal");
+  if (!modal) return;
+  modal.hidden = true;
+  if (document.querySelector("#evidenceEditModal")?.hidden !== false) {
+    document.body.style.overflow = "";
+  }
+}
+
+function openEvidenceEdit(index) {
+  const item = normalizeEvidence(state.evidence[index]);
+  if (!item) return;
+
+  editingEvidenceIndex = index;
+  const modal = document.querySelector("#evidenceEditModal");
+  if (!modal) return;
+
+  document.querySelector("#evidenceEditNo").value = item.no;
+  document.querySelector("#evidenceEditName").value = item.name;
+  document.querySelector("#evidenceEditSource").value = item.source;
+  document.querySelector("#evidenceEditPurpose").value = item.purpose;
+  document.querySelector("#evidenceEditPages").value = item.pages;
+  document.querySelector("#evidenceEditStatus").value = item.status;
+  document.querySelector("#evidenceEditNotes").value = item.notes;
+
+  updateEvidenceEditAttachmentUI(item);
+  closeEvidenceDetailModal();
+  modal.hidden = false;
+  document.body.style.overflow = "hidden";
+}
+
+function closeEvidenceEditModal() {
+  const modal = document.querySelector("#evidenceEditModal");
+  if (!modal) return;
+  modal.hidden = true;
+  editingEvidenceIndex = null;
+  const fileInput = document.querySelector("#evidenceEditFile");
+  if (fileInput) fileInput.value = "";
+  if (document.querySelector("#evidenceDetailModal")?.hidden !== false) {
+    document.body.style.overflow = "";
+  }
+}
+
+function updateEvidenceEditAttachmentUI(item) {
+  const info = document.querySelector("#evidenceEditAttachmentInfo");
+  const removeBtn = document.querySelector("#evidenceEditRemoveFile");
+  const previewBtn = document.querySelector("#evidenceEditPreviewFile");
+  if (!info) return;
+
+  if (item.fileName) {
+    info.textContent = `已上传：${item.fileName}`;
+    if (removeBtn) removeBtn.hidden = false;
+    if (previewBtn) previewBtn.hidden = !item.fileData;
+  } else {
+    info.textContent = "暂无附件";
+    if (removeBtn) removeBtn.hidden = true;
+    if (previewBtn) previewBtn.hidden = true;
+  }
+}
+
+function saveEvidenceFromEditForm(event) {
+  event.preventDefault();
+  if (editingEvidenceIndex === null) return;
+
+  const current = normalizeEvidence(state.evidence[editingEvidenceIndex]);
+  state.evidence[editingEvidenceIndex] = normalizeEvidence({
+    ...current,
+    no: document.querySelector("#evidenceEditNo").value,
+    name: document.querySelector("#evidenceEditName").value,
+    source: document.querySelector("#evidenceEditSource").value,
+    purpose: document.querySelector("#evidenceEditPurpose").value,
+    pages: document.querySelector("#evidenceEditPages").value,
+    status: document.querySelector("#evidenceEditStatus").value,
+    notes: document.querySelector("#evidenceEditNotes").value,
+  });
+
+  saveState();
+  renderEvidence();
+  closeEvidenceEditModal();
+  toast("证据已保存。");
+}
+
+function bindEvidenceModals() {
+  const form = document.querySelector("#evidenceEditForm");
+  if (form) form.addEventListener("submit", saveEvidenceFromEditForm);
+
+  const fileInput = document.querySelector("#evidenceEditFile");
+  if (fileInput) {
+    fileInput.addEventListener("change", () => {
+      if (editingEvidenceIndex === null) return;
+      attachEvidenceFile(editingEvidenceIndex, fileInput.files?.[0], { silent: true });
+      fileInput.value = "";
+      updateEvidenceEditAttachmentUI(normalizeEvidence(state.evidence[editingEvidenceIndex]));
+    });
+  }
+
+  const removeBtn = document.querySelector("#evidenceEditRemoveFile");
+  if (removeBtn) {
+    removeBtn.addEventListener("click", () => {
+      if (editingEvidenceIndex === null) return;
+      clearEvidenceFile(editingEvidenceIndex, { silent: true });
+      updateEvidenceEditAttachmentUI(normalizeEvidence(state.evidence[editingEvidenceIndex]));
+    });
+  }
+
+  const previewBtn = document.querySelector("#evidenceEditPreviewFile");
+  if (previewBtn) {
+    previewBtn.addEventListener("click", () => {
+      if (editingEvidenceIndex === null) return;
+      openEvidencePreview(editingEvidenceIndex);
+    });
+  }
 }
 
 function getSortedTimelineEntries() {
@@ -450,6 +625,7 @@ function bindButtons() {
     );
     saveState();
     renderEvidence();
+    openEvidenceEdit(state.evidence.length - 1);
   });
 
   document.querySelector("#addTimeline").addEventListener("click", () => {
@@ -460,15 +636,16 @@ function bindButtons() {
 
   document.addEventListener("click", (event) => {
     const target = event.target.closest(
-      "[data-delete-evidence], [data-delete-timeline], [data-print-section], [data-preview-evidence], [data-remove-file], [data-close-modal], [data-copy-template], [data-print-template]",
+      "[data-delete-evidence], [data-delete-timeline], [data-print-section], [data-preview-evidence], [data-view-evidence], [data-edit-evidence], [data-close-evidence-modal], [data-close-modal], [data-copy-template], [data-print-template]",
     );
     if (!target) return;
 
     const evidenceIndex = target.dataset.deleteEvidence;
+    const viewEvidenceIndex = target.dataset.viewEvidence;
+    const editEvidenceIndex = target.dataset.editEvidence;
     const timelineIndex = target.dataset.deleteTimeline;
     const printSection = target.dataset.printSection;
     const previewIndex = target.dataset.previewEvidence;
-    const removeFileIndex = target.dataset.removeFile;
     const copyTemplate = target.dataset.copyTemplate;
     const printTemplate = target.dataset.printTemplate;
 
@@ -476,6 +653,19 @@ function bindButtons() {
       state.evidence.splice(Number(evidenceIndex), 1);
       saveState();
       renderEvidence();
+    }
+
+    if (viewEvidenceIndex !== undefined) {
+      openEvidenceDetail(Number(viewEvidenceIndex));
+    }
+
+    if (editEvidenceIndex !== undefined) {
+      openEvidenceEdit(Number(editEvidenceIndex));
+    }
+
+    if (target.dataset.closeEvidenceModal !== undefined) {
+      closeEvidenceDetailModal();
+      closeEvidenceEditModal();
     }
 
     if (timelineIndex !== undefined) {
@@ -486,10 +676,6 @@ function bindButtons() {
 
     if (previewIndex !== undefined) {
       openEvidencePreview(Number(previewIndex));
-    }
-
-    if (removeFileIndex !== undefined) {
-      clearEvidenceFile(Number(removeFileIndex));
     }
 
     if (target.dataset.closeModal !== undefined) {
@@ -509,15 +695,11 @@ function bindButtons() {
     }
   });
 
-  document.addEventListener("change", (event) => {
-    const uploadIndex = event.target.dataset?.uploadEvidence;
-    if (uploadIndex === undefined) return;
-    attachEvidenceFile(Number(uploadIndex), event.target.files?.[0]);
-    event.target.value = "";
-  });
-
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closePreviewModal();
+    if (event.key !== "Escape") return;
+    closePreviewModal();
+    closeEvidenceDetailModal();
+    closeEvidenceEditModal();
   });
 
   document.querySelector("#printAll").addEventListener("click", () => {
@@ -736,7 +918,7 @@ function cloneDefaults() {
   return JSON.parse(JSON.stringify(defaults));
 }
 
-function attachEvidenceFile(index, file) {
+function attachEvidenceFile(index, file, { silent = false } = {}) {
   if (!file) return;
   if (file.size > MAX_ATTACHMENT_BYTES) {
     toast(`文件过大（${formatFileSize(file.size)}），请控制在 ${formatFileSize(MAX_ATTACHMENT_BYTES)} 以内。`);
@@ -753,13 +935,13 @@ function attachEvidenceFile(index, file) {
     state.evidence[index] = item;
     saveState();
     renderEvidence();
-    toast("附件已添加，点击文件名可预览。");
+    if (!silent) toast("附件已添加，可在详情或编辑中预览。");
   };
   reader.onerror = () => toast("读取文件失败，请重试。");
   reader.readAsDataURL(file);
 }
 
-function clearEvidenceFile(index) {
+function clearEvidenceFile(index, { silent = false } = {}) {
   const item = normalizeEvidence(state.evidence[index] || {});
   item.fileName = "";
   item.fileMime = "";
@@ -767,6 +949,7 @@ function clearEvidenceFile(index) {
   state.evidence[index] = item;
   saveState();
   renderEvidence();
+  if (!silent) toast("附件已移除。");
 }
 
 function openEvidencePreview(index) {
@@ -873,4 +1056,5 @@ function bindStepNav() {
 bindFields();
 hydratePage();
 bindButtons();
+bindEvidenceModals();
 bindStepNav();
