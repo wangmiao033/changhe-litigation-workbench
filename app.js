@@ -1,5 +1,4 @@
 const API_ENDPOINT = "/api/case-data";
-const PASSWORD_KEY = "changhe-case-password";
 const SAVE_DELAY_MS = 900;
 
 const defaults = {
@@ -78,15 +77,6 @@ const defaults = {
 let state = cloneDefaults();
 let saveTimer = null;
 let isHydrating = false;
-let cloudPassword = readSessionPassword();
-
-function readSessionPassword() {
-  try {
-    return sessionStorage.getItem(PASSWORD_KEY) || "";
-  } catch {
-    return "";
-  }
-}
 
 function mergeState(base, saved) {
   return {
@@ -192,26 +182,6 @@ function renderTimeline() {
 }
 
 function bindButtons() {
-  const passwordInput = document.querySelector("#cloudPassword");
-  passwordInput.value = cloudPassword;
-  updateCloudStatus(cloudPassword ? "已输入密码，可读取云端资料" : "输入保存密码后连接云端", cloudPassword ? "warn" : "");
-
-  document.querySelector("#unlockCloud").addEventListener("click", () => {
-    cloudPassword = passwordInput.value.trim();
-    storeSessionPassword(cloudPassword);
-    if (!cloudPassword) {
-      updateCloudStatus("请输入网站保存密码", "error");
-      return;
-    }
-    loadCloudState();
-  });
-
-  passwordInput.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      document.querySelector("#unlockCloud").click();
-    }
-  });
-
   document.querySelector("#loadCloud").addEventListener("click", loadCloudState);
   document.querySelector("#saveCloud").addEventListener("click", () => saveCloudState({ immediate: true }));
 
@@ -267,9 +237,7 @@ function bindButtons() {
   window.addEventListener("beforeprint", expandTextareasForPrint);
   window.addEventListener("afterprint", restoreTextareasAfterPrint);
 
-  if (cloudPassword) {
-    loadCloudState();
-  }
+  loadCloudState();
 }
 
 function printOnly(sectionId) {
@@ -286,35 +254,25 @@ function printOnly(sectionId) {
 }
 
 function scheduleCloudSave() {
-  if (!cloudPassword) {
-    updateCloudStatus("未连接云端：输入保存密码后才会保存", "warn");
-    return;
-  }
-
   clearTimeout(saveTimer);
-  updateCloudStatus("有修改，准备保存到云端...", "warn");
+  updateCloudStatus("有修改，准备保存...", "warn");
   saveTimer = setTimeout(() => saveCloudState(), SAVE_DELAY_MS);
 }
 
 async function loadCloudState() {
-  if (!cloudPassword) {
-    updateCloudStatus("请输入网站保存密码后再读取云端", "error");
-    return;
-  }
-
-  updateCloudStatus("正在读取云端资料...", "warn");
+  updateCloudStatus("正在加载资料...", "warn");
   try {
     const result = await requestCloud("GET");
     if (!result.data) {
       state = cloneDefaults();
       hydratePage();
-      updateCloudStatus("云端暂无资料，当前是空白模板", "warn");
+      updateCloudStatus("暂无资料，当前是空白模板", "warn");
       return;
     }
 
     state = mergeState(defaults, result.data.data || result.data);
     hydratePage();
-    updateCloudStatus(`已读取云端资料${formatSavedAt(result.updatedAt || result.data.savedAt)}`, "ok");
+    updateCloudStatus(`资料已加载${formatSavedAt(result.updatedAt || result.data.savedAt)}`, "ok");
   } catch (error) {
     updateCloudStatus(error.message, "error");
     toast(error.message);
@@ -322,19 +280,14 @@ async function loadCloudState() {
 }
 
 async function saveCloudState({ immediate = false } = {}) {
-  if (!cloudPassword) {
-    updateCloudStatus("请输入网站保存密码后再保存云端", "error");
-    return;
-  }
-
   if (immediate) {
     clearTimeout(saveTimer);
   }
 
-  updateCloudStatus("正在保存到云端...", "warn");
+  updateCloudStatus("正在保存...", "warn");
   try {
     const result = await requestCloud("PUT", { data: state });
-    updateCloudStatus(`已保存到云端${formatSavedAt(result.updatedAt)}`, "ok");
+    updateCloudStatus(`已保存${formatSavedAt(result.updatedAt)}`, "ok");
   } catch (error) {
     updateCloudStatus(error.message, "error");
     toast(error.message);
@@ -346,7 +299,6 @@ async function requestCloud(method, body) {
     method,
     headers: {
       "content-type": "application/json",
-      "x-case-password": cloudPassword,
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -370,18 +322,6 @@ function updateCloudStatus(message, tone = "") {
   if (!node) return;
   node.className = `cloud-status ${tone}`.trim();
   node.textContent = message;
-}
-
-function storeSessionPassword(value) {
-  try {
-    if (value) {
-      sessionStorage.setItem(PASSWORD_KEY, value);
-    } else {
-      sessionStorage.removeItem(PASSWORD_KEY);
-    }
-  } catch {
-    // If sessionStorage is blocked, the password still works for the current page.
-  }
 }
 
 function formatSavedAt(value) {

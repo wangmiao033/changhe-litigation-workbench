@@ -14,19 +14,15 @@
         <p class="subtitle">身份材料、答辩思路、证据目录、时间线、打印模板集中整理。</p>
       </div>
       <div class="actions no-print">
-        <div class="cloud-login" aria-label="云端保存">
-          <input id="cloudPassword" type="password" placeholder="网站保存密码" autocomplete="current-password" />
-          <button type="button" class="secondary" id="unlockCloud">连接云端</button>
-        </div>
-        <button type="button" class="secondary" id="loadCloud">读取云端</button>
-        <button type="button" class="secondary" id="saveCloud">保存云端</button>
+        <button type="button" class="secondary" id="loadCloud">刷新资料</button>
+        <button type="button" class="secondary" id="saveCloud">立即保存</button>
         <button type="button" class="secondary" id="exportData">导出备份</button>
         <label class="file-button secondary">
           导入备份
           <input id="importData" type="file" accept="application/json" />
         </label>
         <button type="button" class="primary" id="printAll">打印全套</button>
-        <p class="cloud-status" id="cloudStatus">未连接云端</p>
+        <p class="cloud-status" id="cloudStatus">打开后自动加载，修改后自动保存</p>
       </div>
     </header>
 
@@ -45,7 +41,7 @@
 
       <div class="content">
         <section class="notice">
-          <strong>定位：</strong>这是开庭准备和打印整理工具，不替代律师意见。资料默认保存到 Vercel 云端存储；浏览器本机不保存案件内容。具体期限、提交份数、是否需要线上提交，以法院送达的传票、举证通知书、应诉通知书为准。
+          <strong>定位：</strong>这是开庭准备和打印整理工具，不替代律师意见。资料默认保存到 Vercel 云端存储，打开网站会自动读取。具体期限、提交份数、是否需要线上提交，以法院送达的传票、举证通知书、应诉通知书为准。
         </section>
 
         <section id="case-info" class="panel printable">

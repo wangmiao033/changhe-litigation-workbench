@@ -94,18 +94,6 @@ select {
   max-width: 640px;
 }
 
-.cloud-login {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.cloud-login input {
-  width: 190px;
-  min-height: 42px;
-  border-color: rgba(255, 255, 255, 0.55);
-}
-
 .cloud-status {
   flex-basis: 100%;
   margin: 0;

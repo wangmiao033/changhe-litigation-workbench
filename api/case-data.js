@@ -11,11 +11,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "METHOD_NOT_ALLOWED" });
   }
 
-  const authError = validateAuth(req);
-  if (authError) {
-    return res.status(authError.status).json({ error: authError.code, message: authError.message });
-  }
-
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return res.status(500).json({
       error: "BLOB_NOT_CONFIGURED",
@@ -75,24 +70,6 @@ async function handlePut(req, res) {
     pathname: blob.pathname,
     updatedAt: payload.savedAt,
   });
-}
-
-function validateAuth(req) {
-  const expected = process.env.CASE_DATA_PASSWORD;
-  if (!expected) {
-    return {
-      status: 500,
-      code: "PASSWORD_NOT_CONFIGURED",
-      message: "CASE_DATA_PASSWORD 尚未配置。请先在 Vercel 项目环境变量里设置网站保存密码。",
-    };
-  }
-
-  const provided = req.headers["x-case-password"];
-  if (!provided || provided !== expected) {
-    return { status: 401, code: "UNAUTHORIZED", message: "保存密码不正确。" };
-  }
-
-  return null;
 }
 
 function readJsonBody(req) {
