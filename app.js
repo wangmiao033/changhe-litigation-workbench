@@ -214,6 +214,13 @@ function bindFields() {
     el.value = state.fields[key] || "";
     el.addEventListener("input", () => {
       state.fields[key] = el.value;
+      if (document.querySelector(`[data-readable-view="${key}"]`)) {
+        refreshReadableView(key);
+      }
+      if (["defenseTemplate", "legalRepTemplate", "powerTemplate"].includes(key)) {
+        updateTemplateRowStatuses();
+        syncTemplatePrintBodies();
+      }
       saveState();
     });
   });
@@ -232,6 +239,8 @@ function hydratePage() {
   renderChecklist();
   renderEvidence();
   renderTimeline();
+  refreshAllReadableViews();
+  syncTemplatePrintBodies();
   isHydrating = false;
   updateDashboardStats();
 }
@@ -570,14 +579,169 @@ function renderTimeline() {
 }
 
 function updateDashboardStats() {
-  const completenessEl = document.querySelector("#completenessText");
-  const printReadyEl = document.querySelector("#printReadyText");
-  if (completenessEl) completenessEl.textContent = `${computeCompleteness()}%`;
-  if (printReadyEl) {
-    const ready = isPrintReady();
-    printReadyEl.textContent = ready ? "可打印" : "待完善";
-    printReadyEl.className = `status-value ${ready ? "is-ok" : "is-warn"}`.trim();
+  const completeness = computeCompleteness();
+  const pending = countPendingMaterials();
+  const risk = countRiskReminders();
+  const printable = countPrintableDocuments();
+
+  const setText = (id, text) => {
+    const el = document.querySelector(id);
+    if (el) el.textContent = text;
+  };
+
+  setText("#statCompleteness", `${completeness}%`);
+  setText("#completenessAside", `${completeness}%`);
+  setText("#statPending", String(pending));
+  setText("#statRisk", String(risk));
+  setText("#statPrintable", String(printable));
+
+  const printableHint = document.querySelector("#statPrintableHint");
+  if (printableHint) {
+    printableHint.textContent = isPrintReady() ? "核心信息已具备，可打印" : "待补案号或文书内容";
   }
+
+  updateTemplateRowStatuses();
+}
+
+function countPendingMaterials() {
+  const allItems = MATERIAL_GROUPS.flatMap((g) => g.items);
+  return allItems.filter((item) => {
+    const status = state.checkStatuses[item.key] || (state.checks[item.key] ? "ready" : "pending");
+    return status === "pending" || status === "need" || !state.checks[item.key];
+  }).length;
+}
+
+function countRiskReminders() {
+  let count = 0;
+  if (!state.fields.shareholderNotes?.trim()) count += 1;
+  const weakEvidence = state.evidence.filter(
+    (e) => e.status === "未准备" || e.status === "需补充" || /待|核对/.test(e.status || ""),
+  ).length;
+  return count + weakEvidence;
+}
+
+function countPrintableDocuments() {
+  const templateKeys = ["defenseTemplate", "legalRepTemplate", "powerTemplate"];
+  let n = templateKeys.filter((key) => getTemplateFieldValue(key).trim().length > 80).length;
+  if (isPrintReady()) n += 1;
+  return n;
+}
+
+function getTemplateFieldValue(key) {
+  const field = state.fields[key];
+  if (field?.trim()) return field;
+  return document.querySelector(`[data-field="${key}"]`)?.value || "";
+}
+
+function formatReadableHtml(text = "") {
+  const raw = String(text).trim();
+  if (!raw) return '<p class="readable-placeholder">暂无内容，点击「编辑」填写。</p>';
+  return raw
+    .split(/\n+/)
+    .map((line) => {
+      const safe = escapeText(line);
+      if (/^[一二三四五六七八九十\d]+[、.．)]/.test(line.trim())) {
+        return `<p><strong>${safe}</strong></p>`;
+      }
+      return `<p>${safe}</p>`;
+    })
+    .join("");
+}
+
+function refreshReadableView(key) {
+  const view = document.querySelector(`[data-readable-view="${key}"]`);
+  const textarea = document.querySelector(`[data-field="${key}"]`);
+  if (!view || !textarea) return;
+  view.innerHTML = formatReadableHtml(textarea.value);
+}
+
+function refreshAllReadableViews() {
+  document.querySelectorAll("[data-readable]").forEach((wrapper) => {
+    const key = wrapper.dataset.readable;
+    if (key) refreshReadableView(key);
+  });
+}
+
+function bindReadableFields() {
+  document.querySelectorAll("[data-toggle-readable]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const key = button.dataset.toggleReadable;
+      const wrapper = document.querySelector(`[data-readable="${key}"]`);
+      const textarea = document.querySelector(`[data-field="${key}"]`);
+      const view = document.querySelector(`[data-readable-view="${key}"]`);
+      if (!wrapper || !textarea || !view) return;
+
+      const editing = !wrapper.classList.contains("is-editing");
+      wrapper.classList.toggle("is-editing", editing);
+      textarea.classList.toggle("is-hidden", !editing);
+      view.classList.toggle("is-hidden", editing);
+      button.textContent = editing ? "完成" : "编辑";
+
+      if (editing) {
+        textarea.focus();
+      } else {
+        state.fields[key] = textarea.value;
+        refreshReadableView(key);
+        saveState();
+      }
+    });
+  });
+}
+
+function getTemplateStatusMeta(key) {
+  const value = getTemplateFieldValue(key);
+  if (!value.trim()) return { label: "待补信息", tone: "need" };
+  if (!state.fields.caseNo?.trim() && value.includes("案号")) {
+    return { label: "待核对", tone: "need" };
+  }
+  if (value.trim().length < 60) return { label: "待补信息", tone: "need" };
+  return { label: "可打印", tone: "ready" };
+}
+
+function updateTemplateRowStatuses() {
+  ["defenseTemplate", "legalRepTemplate", "powerTemplate"].forEach((key) => {
+    const badge = document.querySelector(`[data-template-status="${key}"]`);
+    if (!badge) return;
+    const meta = getTemplateStatusMeta(key);
+    badge.textContent = meta.label;
+    badge.className = `template-status tag tag-${meta.tone}`;
+  });
+}
+
+function syncTemplatePrintBodies() {
+  ["defenseTemplate", "legalRepTemplate", "powerTemplate"].forEach((key) => {
+    const pre = document.querySelector(`[data-template-print="${key}"]`);
+    if (pre) pre.textContent = getTemplateFieldValue(key);
+  });
+}
+
+function bindTemplateRegistry() {
+  document.querySelectorAll("[data-toggle-template-edit]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const key = button.dataset.toggleTemplateEdit;
+      const editor = document.querySelector(`[data-template-editor="${key}"]`);
+      if (!editor) return;
+      const collapsed = editor.classList.toggle("is-collapsed");
+      button.textContent = collapsed ? "展开编辑" : "收起编辑";
+    });
+  });
+}
+
+function openTemplatePreview(fieldKey) {
+  const modal = document.querySelector("#previewModal");
+  const title = document.querySelector("#previewTitle");
+  const body = document.querySelector("#previewBody");
+  if (!modal || !title || !body) return;
+
+  const names = {
+    defenseTemplate: "民事答辩状（预览）",
+    legalRepTemplate: "法定代表人身份证明书（预览）",
+    powerTemplate: "授权委托书（预览）",
+  };
+  title.textContent = names[fieldKey] || "文书预览";
+  body.innerHTML = `<pre class="template-preview-text">${escapeText(getTemplateFieldValue(fieldKey))}</pre>`;
+  modal.hidden = false;
+  document.body.style.overflow = "hidden";
 }
 
 function computeCompleteness() {
@@ -636,7 +800,7 @@ function bindButtons() {
 
   document.addEventListener("click", (event) => {
     const target = event.target.closest(
-      "[data-delete-evidence], [data-delete-timeline], [data-print-section], [data-preview-evidence], [data-view-evidence], [data-edit-evidence], [data-close-evidence-modal], [data-close-modal], [data-copy-template], [data-print-template]",
+      "[data-delete-evidence], [data-delete-timeline], [data-print-section], [data-preview-evidence], [data-view-evidence], [data-edit-evidence], [data-close-evidence-modal], [data-close-modal], [data-copy-template], [data-print-template], [data-preview-template]",
     );
     if (!target) return;
 
@@ -648,6 +812,7 @@ function bindButtons() {
     const previewIndex = target.dataset.previewEvidence;
     const copyTemplate = target.dataset.copyTemplate;
     const printTemplate = target.dataset.printTemplate;
+    const previewTemplate = target.dataset.previewTemplate;
 
     if (evidenceIndex !== undefined) {
       state.evidence.splice(Number(evidenceIndex), 1);
@@ -686,7 +851,12 @@ function bindButtons() {
       copyTemplateText(copyTemplate);
     }
 
+    if (previewTemplate) {
+      openTemplatePreview(previewTemplate);
+    }
+
     if (printTemplate) {
+      syncTemplatePrintBodies();
       printSingleTemplate(printTemplate);
     }
 
@@ -702,11 +872,17 @@ function bindButtons() {
     closeEvidenceEditModal();
   });
 
-  document.querySelector("#printAll").addEventListener("click", () => {
+  const runPrintAll = () => {
+    syncTemplatePrintBodies();
     document.body.classList.remove("printing-section", "printing-template");
     document.querySelectorAll(".print-focus").forEach((el) => el.classList.remove("print-focus"));
     window.print();
-  });
+  };
+  document.querySelector("#printAll").addEventListener("click", runPrintAll);
+  const printAllAside = document.querySelector("#printAllAside");
+  if (printAllAside) printAllAside.addEventListener("click", runPrintAll);
+  const saveCloudAside = document.querySelector("#saveCloudAside");
+  if (saveCloudAside) saveCloudAside.addEventListener("click", () => saveCloudState({ immediate: true }));
 
   document.querySelector("#exportData").addEventListener("click", exportData);
   document.querySelector("#importData").addEventListener("change", importData);
@@ -731,7 +907,10 @@ function printOnly(sectionId) {
 }
 
 function printSingleTemplate(fieldKey) {
-  document.querySelectorAll(".template-card.print-focus").forEach((el) => el.classList.remove("print-focus"));
+  syncTemplatePrintBodies();
+  document.querySelectorAll(".template-card.print-focus, .template-print-bodies .print-focus").forEach((el) => {
+    el.classList.remove("print-focus");
+  });
   document.body.classList.remove("printing-section");
   const card = document.querySelector(`[data-template-card="${fieldKey}"]`);
   if (!card) return;
@@ -825,10 +1004,10 @@ async function requestCloud(method, body) {
 function updateCloudStatus(message, tone = "") {
   const saveText = document.querySelector("#saveStatusText");
   if (saveText) {
-    saveText.className = `status-value ${tone ? `is-${tone}` : ""}`.trim();
-    if (tone === "ok") saveText.textContent = "已保存";
-    else if (tone === "warn") saveText.textContent = message.includes("加载") ? "加载中" : "待保存";
-    else if (tone === "error") saveText.textContent = "保存异常";
+    saveText.className = `header-save ${tone ? `is-${tone}` : ""}`.trim();
+    if (tone === "ok") saveText.textContent = "自动保存：已同步";
+    else if (tone === "warn") saveText.textContent = message.includes("加载") ? "自动保存：加载中" : "自动保存：待保存";
+    else if (tone === "error") saveText.textContent = "自动保存：异常";
     else saveText.textContent = message;
   }
 
@@ -880,6 +1059,13 @@ function importData(event) {
 }
 
 function expandTextareasForPrint() {
+  syncTemplatePrintBodies();
+  document.querySelectorAll(".readable-field").forEach((wrapper) => {
+    wrapper.classList.add("is-printing");
+  });
+  document.querySelectorAll(".template-row-editor").forEach((el) => {
+    el.classList.remove("is-collapsed");
+  });
   document.querySelectorAll("textarea").forEach((el) => {
     el.dataset.oldHeight = el.style.height || "";
     el.style.height = `${el.scrollHeight + 8}px`;
@@ -887,6 +1073,9 @@ function expandTextareasForPrint() {
 }
 
 function restoreTextareasAfterPrint() {
+  document.querySelectorAll(".readable-field").forEach((wrapper) => {
+    wrapper.classList.remove("is-printing");
+  });
   document.querySelectorAll("textarea").forEach((el) => {
     el.style.height = el.dataset.oldHeight || "";
     delete el.dataset.oldHeight;
@@ -1020,7 +1209,7 @@ function formatFileSize(bytes) {
 }
 
 function bindStepNav() {
-  const steps = [...document.querySelectorAll(".step-nav a")];
+  const steps = [...document.querySelectorAll(".side-nav-link, .mobile-tab")];
   const sections = steps
     .map((link) => document.querySelector(link.getAttribute("href")))
     .filter(Boolean);
@@ -1054,6 +1243,8 @@ function bindStepNav() {
 }
 
 bindFields();
+bindReadableFields();
+bindTemplateRegistry();
 hydratePage();
 bindButtons();
 bindEvidenceModals();

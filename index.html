@@ -8,61 +8,85 @@
   </head>
   <body>
     <header class="site-header printable-header">
-      <div class="header-brand">
-        <h1>海南畅核网络科技有限公司</h1>
-        <p class="header-subtitle">被告开庭资料工作台</p>
-      </div>
-
-      <div class="status-bar no-print" aria-label="资料状态">
-        <div class="status-pill">
-          <span class="status-label">自动保存</span>
-          <strong id="saveStatusText" class="status-value">加载中…</strong>
+      <div class="header-inner">
+        <div class="header-brand">
+          <h1>海南畅核网络科技有限公司</h1>
+          <p class="header-subtitle">被告开庭资料工作台</p>
         </div>
-        <div class="status-pill">
-          <span class="status-label">资料完整度</span>
-          <strong id="completenessText" class="status-value">0%</strong>
+        <div class="header-meta no-print">
+          <span class="header-save" id="saveStatusText">加载中…</span>
         </div>
-        <div class="status-pill">
-          <span class="status-label">可打印</span>
-          <strong id="printReadyText" class="status-value">待完善</strong>
-        </div>
-      </div>
-
-      <div class="header-actions no-print">
-        <div class="action-group action-group--primary">
+        <div class="header-actions no-print">
           <button type="button" class="primary" id="saveCloud">立即保存</button>
-          <button type="button" class="primary" id="printAll">打印全套</button>
-        </div>
-        <div class="action-group">
+          <button type="button" class="btn-print" id="printAll">打印全套</button>
           <button type="button" class="secondary" id="exportData">导出备份</button>
           <label class="file-button secondary">
             导入备份
             <input id="importData" type="file" accept="application/json" />
           </label>
-        </div>
-        <div class="action-group">
           <button type="button" class="ghost" id="loadCloud">刷新资料</button>
         </div>
         <p class="cloud-status" id="cloudStatus" hidden></p>
+        <p class="header-print-meta print-only">被告开庭资料工作台 · 海南畅核网络科技有限公司</p>
       </div>
     </header>
 
-    <nav class="step-nav no-print" aria-label="整理步骤">
-      <a class="step-link" href="#case-info" data-step="1"><span class="step-num">1</span>案件信息</a>
-      <a class="step-link" href="#service-delivery" data-step="2"><span class="step-num">2</span>电子送达</a>
-      <a class="step-link" href="#must-have" data-step="3"><span class="step-num">3</span>材料清单</a>
-      <a class="step-link" href="#evidence" data-step="4"><span class="step-num">4</span>证据目录</a>
-      <a class="step-link" href="#timeline" data-step="5"><span class="step-num">5</span>事实时间线</a>
-      <a class="step-link" href="#defense" data-step="6"><span class="step-num">6</span>答辩提纲</a>
-      <a class="step-link" href="#shareholder" data-step="7"><span class="step-num">7</span>股东专项</a>
-      <a class="step-link" href="#templates" data-step="8"><span class="step-num">8</span>打印模板</a>
-      <a class="step-link" href="#sources" data-step="9"><span class="step-num">9</span>依据来源</a>
-    </nav>
+    <div class="app-shell">
+      <nav class="side-nav no-print" aria-label="整理步骤">
+        <p class="side-nav-title">整理步骤</p>
+        <a class="side-nav-link" href="#case-info"><span class="nav-order">01</span>案件信息</a>
+        <a class="side-nav-link" href="#service-delivery"><span class="nav-order">02</span>电子送达</a>
+        <a class="side-nav-link" href="#must-have"><span class="nav-order">03</span>材料清单</a>
+        <a class="side-nav-link" href="#evidence"><span class="nav-order">04</span>证据目录</a>
+        <a class="side-nav-link" href="#timeline"><span class="nav-order">05</span>事实时间线</a>
+        <a class="side-nav-link" href="#defense"><span class="nav-order">06</span>答辩提纲</a>
+        <a class="side-nav-link side-nav-link--risk" href="#shareholder">
+          <span class="nav-order">07</span>股东专项<span class="nav-risk-badge">风险</span>
+        </a>
+        <a class="side-nav-link" href="#templates"><span class="nav-order">08</span>打印模板</a>
+        <a class="side-nav-link" href="#sources"><span class="nav-order">09</span>依据来源</a>
+      </nav>
 
-    <main class="page-main">
-      <p class="page-intro no-print">
-        开庭资料整理与打印工具，不替代律师意见。修改后自动保存至云端；具体期限与份数以法院送达文书为准。
-      </p>
+      <div class="workspace">
+        <nav class="mobile-tabs no-print" aria-label="移动端步骤">
+          <a class="mobile-tab" href="#case-info">01 案件</a>
+          <a class="mobile-tab" href="#service-delivery">02 送达</a>
+          <a class="mobile-tab" href="#must-have">03 材料</a>
+          <a class="mobile-tab" href="#evidence">04 证据</a>
+          <a class="mobile-tab" href="#timeline">05 时间线</a>
+          <a class="mobile-tab" href="#defense">06 答辩</a>
+          <a class="mobile-tab" href="#shareholder">07 股东</a>
+          <a class="mobile-tab" href="#templates">08 模板</a>
+          <a class="mobile-tab" href="#sources">09 来源</a>
+        </nav>
+
+        <main class="page-main">
+          <p class="page-intro no-print">
+            开庭资料整理与打印工具，不替代律师意见。修改后自动保存至云端；具体期限与份数以法院送达文书为准。
+          </p>
+
+          <section class="dashboard-stats no-print" aria-label="案件状态摘要">
+            <article class="stat-card stat-card--success">
+              <span class="stat-label">材料完成度</span>
+              <strong class="stat-value" id="statCompleteness">0%</strong>
+              <span class="stat-hint" id="statCompletenessHint">按清单与证据统计</span>
+            </article>
+            <article class="stat-card stat-card--warn">
+              <span class="stat-label">待补材料</span>
+              <strong class="stat-value" id="statPending">0</strong>
+              <span class="stat-hint">项待准备或需补充</span>
+            </article>
+            <article class="stat-card stat-card--danger">
+              <span class="stat-label">风险提醒</span>
+              <strong class="stat-value" id="statRisk">0</strong>
+              <span class="stat-hint">股东专项与证据风险</span>
+            </article>
+            <article class="stat-card stat-card--info">
+              <span class="stat-label">可打印文书</span>
+              <strong class="stat-value" id="statPrintable">0</strong>
+              <span class="stat-hint" id="statPrintableHint">模板与核心信息</span>
+            </article>
+          </section>
 
       <section id="case-info" class="card panel printable" data-step-card="1">
         <div class="card-head">
@@ -71,7 +95,7 @@
             <h2>案件基本信息</h2>
             <p class="card-desc">填写案号、法院、开庭时间等核心信息，便于后续文书与清单引用。</p>
           </div>
-          <button type="button" class="secondary no-print" data-print-section="case-info">打印本节</button>
+          <button type="button" class="btn-print no-print" data-print-section="case-info">打印本节</button>
         </div>
         <div class="form-grid">
           <label>案号 <input data-field="caseNo" placeholder="如：（2026）琼01民初0000号" /></label>
@@ -107,7 +131,14 @@
           <label>法院地址 <input data-field="serviceAddress" /></label>
           <label>官方入口 <input data-field="serviceOfficialEntry" /></label>
           <label>短信专属查阅链接 <input data-field="servicePrivateLink" placeholder="带送达参数，建议只保存在云端" /></label>
-          <label class="full-span">短信内容摘要和处理记录 <textarea data-field="serviceNotes" rows="8"></textarea></label>
+          <div class="readable-field full-span" data-readable="serviceNotes">
+            <div class="readable-field-head no-print">
+              <span class="readable-field-label">短信内容摘要和处理记录</span>
+              <button type="button" class="ghost" data-toggle-readable="serviceNotes">编辑</button>
+            </div>
+            <div class="readable-view" data-readable-view="serviceNotes"></div>
+            <textarea class="readable-editor field-textarea" data-field="serviceNotes" rows="8"></textarea>
+          </div>
         </div>
       </section>
 
@@ -118,7 +149,7 @@
             <h2>开庭必备材料清单</h2>
             <p class="card-desc">按分类勾选并标记准备状态，开庭前逐项核对。</p>
           </div>
-          <button type="button" class="secondary no-print" data-print-section="must-have">打印清单</button>
+          <button type="button" class="btn-print no-print" data-print-section="must-have">打印清单</button>
         </div>
         <div id="checklistRoot" class="checklist-groups"></div>
       </section>
@@ -132,7 +163,7 @@
           </div>
           <div class="card-actions no-print">
             <button type="button" class="secondary" id="addEvidence">新增证据</button>
-            <button type="button" class="secondary" data-print-section="evidence">打印目录</button>
+            <button type="button" class="btn-print" data-print-section="evidence">打印目录</button>
           </div>
         </div>
         <div id="evidenceEmpty" class="empty-guide no-print" hidden></div>
@@ -217,7 +248,7 @@
           </div>
           <div class="card-actions no-print">
             <button type="button" class="secondary" id="addTimeline">新增事件</button>
-            <button type="button" class="secondary" data-print-section="timeline">打印时间线</button>
+            <button type="button" class="btn-print" data-print-section="timeline">打印时间线</button>
           </div>
         </div>
         <div id="timelineEmpty" class="empty-guide no-print" hidden></div>
@@ -231,25 +262,45 @@
             <h2>答辩和庭审提纲</h2>
             <p class="card-desc">庭前整理请求权、答辩观点、质证意见与发言顺序。</p>
           </div>
-          <button type="button" class="secondary no-print" data-print-section="defense">打印提纲</button>
+          <button type="button" class="btn-print no-print" data-print-section="defense">打印提纲</button>
         </div>
         <p class="hint-banner">内容仅作开庭准备参考，不替代律师意见。</p>
         <div class="defense-grid">
-          <article class="sub-card">
-            <h3>原告诉讼请求逐项拆解</h3>
-            <textarea data-field="claimsBreakdown" rows="8" placeholder="1. 原告请求金额：&#10;2. 请求依据：&#10;3. 我方认可/不认可部分：&#10;4. 金额计算问题："></textarea>
+          <article class="sub-card readable-field" data-readable="claimsBreakdown">
+            <div class="readable-field-head no-print">
+              <h3>原告诉讼请求逐项拆解</h3>
+              <button type="button" class="ghost" data-toggle-readable="claimsBreakdown">编辑</button>
+            </div>
+            <h3 class="print-only">原告诉讼请求逐项拆解</h3>
+            <div class="readable-view" data-readable-view="claimsBreakdown"></div>
+            <textarea class="readable-editor field-textarea" data-field="claimsBreakdown" rows="8" placeholder="1. 原告请求金额：&#10;2. 请求依据：&#10;3. 我方认可/不认可部分：&#10;4. 金额计算问题："></textarea>
           </article>
-          <article class="sub-card">
-            <h3>我方核心答辩观点</h3>
-            <textarea data-field="defensePoints" rows="8" placeholder="合同是否成立、履行情况、违约事实、损失和因果关系、金额计算、诉讼主体、管辖/时效等。"></textarea>
+          <article class="sub-card readable-field" data-readable="defensePoints">
+            <div class="readable-field-head no-print">
+              <h3>我方核心答辩观点</h3>
+              <button type="button" class="ghost" data-toggle-readable="defensePoints">编辑</button>
+            </div>
+            <h3 class="print-only">我方核心答辩观点</h3>
+            <div class="readable-view" data-readable-view="defensePoints"></div>
+            <textarea class="readable-editor field-textarea" data-field="defensePoints" rows="8"></textarea>
           </article>
-          <article class="sub-card">
-            <h3>对原告证据的质证意见</h3>
-            <textarea data-field="crossExamination" rows="8" placeholder="按证据编号：真实性、合法性、关联性、证明目的是否成立。"></textarea>
+          <article class="sub-card readable-field" data-readable="crossExamination">
+            <div class="readable-field-head no-print">
+              <h3>对原告证据的质证意见</h3>
+              <button type="button" class="ghost" data-toggle-readable="crossExamination">编辑</button>
+            </div>
+            <h3 class="print-only">对原告证据的质证意见</h3>
+            <div class="readable-view" data-readable-view="crossExamination"></div>
+            <textarea class="readable-editor field-textarea" data-field="crossExamination" rows="8"></textarea>
           </article>
-          <article class="sub-card">
-            <h3>庭审发言顺序草稿</h3>
-            <textarea data-field="hearingScript" rows="8" placeholder="核对身份 → 回避 → 答辩 → 举证 → 质证 → 辩论 → 最后陈述。"></textarea>
+          <article class="sub-card readable-field" data-readable="hearingScript">
+            <div class="readable-field-head no-print">
+              <h3>庭审发言顺序草稿</h3>
+              <button type="button" class="ghost" data-toggle-readable="hearingScript">编辑</button>
+            </div>
+            <h3 class="print-only">庭审发言顺序草稿</h3>
+            <div class="readable-view" data-readable-view="hearingScript"></div>
+            <textarea class="readable-editor field-textarea" data-field="hearingScript" rows="8"></textarea>
           </article>
         </div>
       </section>
@@ -261,7 +312,7 @@
             <h2>99% 股东身份专项准备</h2>
             <p class="card-desc">高持股比例需额外关注诉讼身份、公司独立性与庭上表达边界。</p>
           </div>
-          <button type="button" class="secondary no-print" data-print-section="shareholder">打印专项</button>
+          <button type="button" class="btn-print no-print" data-print-section="shareholder">打印专项</button>
         </div>
         <div class="risk-alert">
           <strong>重点提示：</strong>如起诉状同时列个人为被告，应另行准备个人答辩和个人证据。
@@ -279,33 +330,43 @@
             <h3>3. 庭上表达边界</h3>
             <p>区分“公司行为”和“个人行为”。不要把个人承诺、个人收款、个人聊天表述随意替代公司意思表示；确需说明时，和证据编号对应。</p>
           </article>
-          <article class="risk-block risk-block--fill">
-            <h3>4. 我方股东责任专项说明</h3>
-            <textarea data-field="shareholderNotes" rows="8" placeholder="是否为一人公司、其他股东、注册资本实缴、个人账户收付款、公司和个人财产如何分离。"></textarea>
+          <article class="risk-block risk-block--fill readable-field" data-readable="shareholderNotes">
+            <div class="readable-field-head no-print">
+              <h3>4. 我方股东责任专项说明</h3>
+              <button type="button" class="ghost" data-toggle-readable="shareholderNotes">编辑</button>
+            </div>
+            <h3 class="print-only">4. 我方股东责任专项说明</h3>
+            <div class="readable-view" data-readable-view="shareholderNotes"></div>
+            <textarea class="readable-editor field-textarea" data-field="shareholderNotes" rows="8" placeholder="是否为一人公司、其他股东、注册资本实缴、个人账户收付款、公司和个人财产如何分离。"></textarea>
           </article>
         </div>
       </section>
 
-      <section id="templates" class="card panel printable" data-step-card="8">
+      <section id="templates" class="card panel printable card--printable" data-step-card="8">
         <div class="card-head">
           <div class="card-title-wrap">
             <p class="card-step">步骤 8</p>
             <h2>常用文书模板</h2>
-            <p class="card-desc">可直接编辑、复制或单独打印正式文书格式。</p>
+            <p class="card-desc">列表查看状态，预览或打印；完整正文在「展开编辑」中修改。</p>
           </div>
-          <button type="button" class="secondary no-print" data-print-section="templates">打印全部模板</button>
+          <button type="button" class="btn-print no-print" data-print-section="templates">打印全部模板</button>
         </div>
-        <div class="template-list">
-          <article class="template-card printable" data-template-card="defenseTemplate">
-            <div class="template-card-head no-print">
-              <h3>民事答辩状（法人/其他组织）</h3>
-              <div class="template-card-actions">
-                <button type="button" class="ghost" data-copy-template="defenseTemplate">复制文本</button>
-                <button type="button" class="secondary" data-print-template="defenseTemplate">打印本模板</button>
+        <div class="template-registry no-print">
+          <article class="template-row" data-template-row="defenseTemplate">
+            <div class="template-row-main">
+              <div class="template-row-info">
+                <h3>民事答辩状（法人/其他组织）</h3>
+                <span class="template-status tag tag-pending" data-template-status="defenseTemplate">待核对</span>
+              </div>
+              <div class="template-row-actions">
+                <button type="button" class="secondary" data-preview-template="defenseTemplate">预览</button>
+                <button type="button" class="btn-print" data-print-template="defenseTemplate">打印</button>
+                <button type="button" class="ghost" data-copy-template="defenseTemplate">复制</button>
+                <button type="button" class="ghost" data-toggle-template-edit="defenseTemplate">展开编辑</button>
               </div>
             </div>
-            <h3 class="print-only-template-title">民事答辩状（法人/其他组织）</h3>
-            <textarea data-field="defenseTemplate" rows="16">民事答辩状
+            <div class="template-row-editor is-collapsed" data-template-editor="defenseTemplate">
+              <textarea class="field-textarea" data-field="defenseTemplate" rows="16">民事答辩状
 
 答辩人：海南畅核网络科技有限公司
 住所地：
@@ -334,18 +395,24 @@
 答辩人：海南畅核网络科技有限公司（盖章）
 法定代表人/委托诉讼代理人：
 日期：    年  月  日</textarea>
+            </div>
           </article>
 
-          <article class="template-card printable" data-template-card="legalRepTemplate">
-            <div class="template-card-head no-print">
-              <h3>法定代表人身份证明书</h3>
-              <div class="template-card-actions">
-                <button type="button" class="ghost" data-copy-template="legalRepTemplate">复制文本</button>
-                <button type="button" class="secondary" data-print-template="legalRepTemplate">打印本模板</button>
+          <article class="template-row" data-template-row="legalRepTemplate">
+            <div class="template-row-main">
+              <div class="template-row-info">
+                <h3>法定代表人身份证明书</h3>
+                <span class="template-status tag tag-pending" data-template-status="legalRepTemplate">待核对</span>
+              </div>
+              <div class="template-row-actions">
+                <button type="button" class="secondary" data-preview-template="legalRepTemplate">预览</button>
+                <button type="button" class="btn-print" data-print-template="legalRepTemplate">打印</button>
+                <button type="button" class="ghost" data-copy-template="legalRepTemplate">复制</button>
+                <button type="button" class="ghost" data-toggle-template-edit="legalRepTemplate">展开编辑</button>
               </div>
             </div>
-            <h3 class="print-only-template-title">法定代表人身份证明书</h3>
-            <textarea data-field="legalRepTemplate" rows="12">法定代表人身份证明书
+            <div class="template-row-editor is-collapsed" data-template-editor="legalRepTemplate">
+              <textarea class="field-textarea" data-field="legalRepTemplate" rows="12">法定代表人身份证明书
 
 海南畅核网络科技有限公司，统一社会信用代码：                  。
 住所地：                  。
@@ -356,18 +423,24 @@
 
 单位：海南畅核网络科技有限公司（盖章）
 日期：    年  月  日</textarea>
+            </div>
           </article>
 
-          <article class="template-card printable" data-template-card="powerTemplate">
-            <div class="template-card-head no-print">
-              <h3>授权委托书（公司委托代理人）</h3>
-              <div class="template-card-actions">
-                <button type="button" class="ghost" data-copy-template="powerTemplate">复制文本</button>
-                <button type="button" class="secondary" data-print-template="powerTemplate">打印本模板</button>
+          <article class="template-row" data-template-row="powerTemplate">
+            <div class="template-row-main">
+              <div class="template-row-info">
+                <h3>授权委托书（公司委托代理人）</h3>
+                <span class="template-status tag tag-pending" data-template-status="powerTemplate">待核对</span>
+              </div>
+              <div class="template-row-actions">
+                <button type="button" class="secondary" data-preview-template="powerTemplate">预览</button>
+                <button type="button" class="btn-print" data-print-template="powerTemplate">打印</button>
+                <button type="button" class="ghost" data-copy-template="powerTemplate">复制</button>
+                <button type="button" class="ghost" data-toggle-template-edit="powerTemplate">展开编辑</button>
               </div>
             </div>
-            <h3 class="print-only-template-title">授权委托书（公司委托代理人）</h3>
-            <textarea data-field="powerTemplate" rows="14">授权委托书
+            <div class="template-row-editor is-collapsed" data-template-editor="powerTemplate">
+              <textarea class="field-textarea" data-field="powerTemplate" rows="14">授权委托书
 
 委托人：海南畅核网络科技有限公司
 住所地：
@@ -383,6 +456,22 @@
 委托人：海南畅核网络科技有限公司（盖章）
 法定代表人：
 日期：    年  月  日</textarea>
+            </div>
+          </article>
+        </div>
+
+        <div class="template-print-bodies">
+          <article class="template-card printable print-only-block" data-template-card="defenseTemplate">
+            <h3 class="print-only-template-title">民事答辩状（法人/其他组织）</h3>
+            <pre class="template-print-text" data-template-print="defenseTemplate"></pre>
+          </article>
+          <article class="template-card printable print-only-block" data-template-card="legalRepTemplate">
+            <h3 class="print-only-template-title">法定代表人身份证明书</h3>
+            <pre class="template-print-text" data-template-print="legalRepTemplate"></pre>
+          </article>
+          <article class="template-card printable print-only-block" data-template-card="powerTemplate">
+            <h3 class="print-only-template-title">授权委托书（公司委托代理人）</h3>
+            <pre class="template-print-text" data-template-print="powerTemplate"></pre>
           </article>
         </div>
       </section>
@@ -403,7 +492,22 @@
           <li><a href="https://www.npc.gov.cn/c2/c30834/202312/t20231229_433999.html" target="_blank" rel="noreferrer">中国人大网：中华人民共和国公司法（2023 年修订）</a></li>
         </ul>
       </section>
-    </main>
+        </main>
+
+        <aside class="quick-panel no-print" aria-label="快捷操作">
+          <h3 class="quick-panel-title">快捷操作</h3>
+          <button type="button" class="btn-print btn-block" id="printAllAside">打印全套</button>
+          <button type="button" class="primary btn-block" id="saveCloudAside">立即保存</button>
+          <div class="quick-panel-links">
+            <a href="#must-have">材料清单</a>
+            <a href="#evidence">证据目录</a>
+            <a href="#templates">文书模板</a>
+            <a href="#shareholder" class="quick-link-risk">股东专项</a>
+          </div>
+          <p class="quick-panel-note">完整度 <strong id="completenessAside">0%</strong></p>
+        </aside>
+      </div>
+    </div>
 
     <div id="previewModal" class="modal no-print" hidden>
       <div class="modal-backdrop" data-close-modal></div>

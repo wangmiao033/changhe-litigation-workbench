@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vercel dev",
     "check": "node --check app.js && node --check api/case-data.js",
-    "build": "node --check app.js && node --check api/case-data.js"
+    "build": "node --check app.js && node --check api/case-data.js && node scripts/prepare-public.mjs"
   },
   "dependencies": {
     "@vercel/blob": "^2.4.0"
