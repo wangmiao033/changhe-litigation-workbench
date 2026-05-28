@@ -33,6 +33,7 @@
     <main class="layout">
       <nav class="sidebar no-print" aria-label="页面导航">
         <a href="#case-info">案件信息</a>
+        <a href="#service-delivery">电子送达</a>
         <a href="#must-have">材料清单</a>
         <a href="#evidence">证据目录</a>
         <a href="#timeline">事实时间线</a>
@@ -99,6 +100,62 @@
           </div>
         </section>
 
+        <section id="service-delivery" class="panel printable">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">新增事项</p>
+              <h2>法院电子送达事项</h2>
+            </div>
+            <button type="button" class="secondary no-print" data-print-section="service-delivery">打印本节</button>
+          </div>
+          <div class="form-grid">
+            <label>
+              短信对应案号
+              <input data-field="serviceCaseNo" />
+            </label>
+            <label>
+              法院
+              <input data-field="serviceCourt" />
+            </label>
+            <label>
+              短信中的被送达人名称
+              <input data-field="serviceCompanyName" />
+            </label>
+            <label>
+              收到通知时间
+              <input data-field="serviceReceivedAt" />
+            </label>
+            <label>
+              当前事项
+              <input data-field="serviceMatter" />
+            </label>
+            <label>
+              联系人
+              <input data-field="serviceContacts" />
+            </label>
+            <label>
+              电话
+              <input data-field="servicePhone" />
+            </label>
+            <label>
+              法院地址
+              <input data-field="serviceAddress" />
+            </label>
+            <label>
+              官方入口
+              <input data-field="serviceOfficialEntry" />
+            </label>
+            <label>
+              短信专属查阅链接
+              <input data-field="servicePrivateLink" placeholder="带送达参数，建议只保存在云端，不公开转发" />
+            </label>
+            <label class="full-span">
+              短信内容摘要和处理记录
+              <textarea data-field="serviceNotes" rows="8"></textarea>
+            </label>
+          </div>
+        </section>
+
         <section id="must-have" class="panel printable">
           <div class="section-head">
             <div>
@@ -108,6 +165,10 @@
             <button type="button" class="secondary no-print" data-print-section="must-have">打印清单</button>
           </div>
           <div class="checklist">
+            <label><input type="checkbox" data-check="verify-company-name" />核对短信中的公司名称是否与营业执照完整名称一致。</label>
+            <label><input type="checkbox" data-check="service-address-form" />填写《广州法院电子送达地址确认书》，并加盖公司公章。</label>
+            <label><input type="checkbox" data-check="submit-service-address" />通过人民法院在线服务提交电子送达地址确认书。</label>
+            <label><input type="checkbox" data-check="call-court" />电话联系海珠法院民四庭，确认原告、案由、送达地址和后续邮寄材料。</label>
             <label><input type="checkbox" data-check="summons" />法院材料：传票、应诉通知书、举证通知书、起诉状副本、原告证据副本。</label>
             <label><input type="checkbox" data-check="license" />公司主体材料：营业执照复印件、统一社会信用代码信息、公司盖章页。</label>
             <label><input type="checkbox" data-check="legal-rep" />法定代表人身份证明书、法定代表人身份证复印件。</label>
