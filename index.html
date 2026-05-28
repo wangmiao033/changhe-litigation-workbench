@@ -7,301 +7,251 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">被告方开庭资料工作台</p>
+    <header class="site-header printable-header">
+      <div class="header-brand">
         <h1>海南畅核网络科技有限公司</h1>
-        <p class="subtitle">身份材料、答辩思路、证据目录、时间线、打印模板集中整理。</p>
+        <p class="header-subtitle">被告开庭资料工作台</p>
       </div>
-      <div class="actions no-print">
-        <button type="button" class="secondary" id="loadCloud">刷新资料</button>
-        <button type="button" class="secondary" id="saveCloud">立即保存</button>
-        <button type="button" class="secondary" id="exportData">导出备份</button>
-        <label class="file-button secondary">
-          导入备份
-          <input id="importData" type="file" accept="application/json" />
-        </label>
-        <button type="button" class="primary" id="printAll">打印全套</button>
-        <p class="cloud-status" id="cloudStatus">打开后自动加载，修改后自动保存</p>
+
+      <div class="status-bar no-print" aria-label="资料状态">
+        <div class="status-pill">
+          <span class="status-label">自动保存</span>
+          <strong id="saveStatusText" class="status-value">加载中…</strong>
+        </div>
+        <div class="status-pill">
+          <span class="status-label">资料完整度</span>
+          <strong id="completenessText" class="status-value">0%</strong>
+        </div>
+        <div class="status-pill">
+          <span class="status-label">可打印</span>
+          <strong id="printReadyText" class="status-value">待完善</strong>
+        </div>
+      </div>
+
+      <div class="header-actions no-print">
+        <div class="action-group action-group--primary">
+          <button type="button" class="primary" id="saveCloud">立即保存</button>
+          <button type="button" class="primary" id="printAll">打印全套</button>
+        </div>
+        <div class="action-group">
+          <button type="button" class="secondary" id="exportData">导出备份</button>
+          <label class="file-button secondary">
+            导入备份
+            <input id="importData" type="file" accept="application/json" />
+          </label>
+        </div>
+        <div class="action-group">
+          <button type="button" class="ghost" id="loadCloud">刷新资料</button>
+        </div>
+        <p class="cloud-status" id="cloudStatus" hidden></p>
       </div>
     </header>
 
-    <main class="layout">
-      <nav class="sidebar no-print" aria-label="页面导航">
-        <a href="#case-info">案件信息</a>
-        <a href="#service-delivery">电子送达</a>
-        <a href="#must-have">材料清单</a>
-        <a href="#evidence">证据目录</a>
-        <a href="#timeline">事实时间线</a>
-        <a href="#defense">答辩要点</a>
-        <a href="#shareholder">99% 股东专项</a>
-        <a href="#templates">打印模板</a>
-        <a href="#sources">依据来源</a>
-      </nav>
+    <nav class="step-nav no-print" aria-label="整理步骤">
+      <a class="step-link" href="#case-info" data-step="1"><span class="step-num">1</span>案件信息</a>
+      <a class="step-link" href="#service-delivery" data-step="2"><span class="step-num">2</span>电子送达</a>
+      <a class="step-link" href="#must-have" data-step="3"><span class="step-num">3</span>材料清单</a>
+      <a class="step-link" href="#evidence" data-step="4"><span class="step-num">4</span>证据目录</a>
+      <a class="step-link" href="#timeline" data-step="5"><span class="step-num">5</span>事实时间线</a>
+      <a class="step-link" href="#defense" data-step="6"><span class="step-num">6</span>答辩提纲</a>
+      <a class="step-link" href="#shareholder" data-step="7"><span class="step-num">7</span>股东专项</a>
+      <a class="step-link" href="#templates" data-step="8"><span class="step-num">8</span>打印模板</a>
+      <a class="step-link" href="#sources" data-step="9"><span class="step-num">9</span>依据来源</a>
+    </nav>
 
-      <div class="content">
-        <section class="notice">
-          <strong>定位：</strong>这是开庭准备和打印整理工具，不替代律师意见。资料默认保存到 Vercel 云端存储，打开网站会自动读取。具体期限、提交份数、是否需要线上提交，以法院送达的传票、举证通知书、应诉通知书为准。
-        </section>
+    <main class="page-main">
+      <p class="page-intro no-print">
+        开庭资料整理与打印工具，不替代律师意见。修改后自动保存至云端；具体期限与份数以法院送达文书为准。
+      </p>
 
-        <section id="case-info" class="panel printable">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">第一步</p>
-              <h2>案件基本信息</h2>
-            </div>
-            <button type="button" class="secondary no-print" data-print-section="case-info">打印本节</button>
+      <section id="case-info" class="card panel printable" data-step-card="1">
+        <div class="card-head">
+          <div class="card-title-wrap">
+            <p class="card-step">步骤 1</p>
+            <h2>案件基本信息</h2>
+            <p class="card-desc">填写案号、法院、开庭时间等核心信息，便于后续文书与清单引用。</p>
           </div>
-          <div class="form-grid">
-            <label>
-              案号
-              <input data-field="caseNo" placeholder="如：（2026）琼01民初0000号" />
-            </label>
-            <label>
-              受理法院
-              <input data-field="court" placeholder="如：海口市某某人民法院" />
-            </label>
-            <label>
-              案由
-              <input data-field="cause" placeholder="如：合同纠纷 / 服务合同纠纷" />
-            </label>
-            <label>
-              开庭时间
-              <input data-field="hearingAt" placeholder="如：2026-06-10 09:30" />
-            </label>
-            <label>
-              原告
-              <input data-field="plaintiff" placeholder="原告姓名或公司名称" />
-            </label>
-            <label>
-              承办法官 / 书记员
-              <input data-field="judge" placeholder="姓名、电话、法院内线" />
-            </label>
-            <label>
-              法定代表人
-              <input data-field="legalRep" placeholder="姓名、职务" />
-            </label>
-            <label>
-              出庭人员
-              <input data-field="attendee" placeholder="法定代表人 / 员工代理 / 律师" />
-            </label>
-            <label>
-              答辩期限
-              <input data-field="defenseDeadline" placeholder="收到起诉状副本后按通知核对" />
-            </label>
-            <label>
-              举证期限
-              <input data-field="evidenceDeadline" placeholder="以举证通知书为准" />
-            </label>
-          </div>
-        </section>
+          <button type="button" class="secondary no-print" data-print-section="case-info">打印本节</button>
+        </div>
+        <div class="form-grid">
+          <label>案号 <input data-field="caseNo" placeholder="如：（2026）琼01民初0000号" /></label>
+          <label>受理法院 <input data-field="court" placeholder="如：海口市某某人民法院" /></label>
+          <label>案由 <input data-field="cause" placeholder="如：合同纠纷 / 服务合同纠纷" /></label>
+          <label>开庭时间 <input data-field="hearingAt" placeholder="如：2026-06-10 09:30" /></label>
+          <label>原告 <input data-field="plaintiff" placeholder="原告姓名或公司名称" /></label>
+          <label>承办法官 / 书记员 <input data-field="judge" placeholder="姓名、电话、法院内线" /></label>
+          <label>法定代表人 <input data-field="legalRep" placeholder="姓名、职务" /></label>
+          <label>出庭人员 <input data-field="attendee" placeholder="法定代表人 / 员工代理 / 律师" /></label>
+          <label>答辩期限 <input data-field="defenseDeadline" placeholder="收到起诉状副本后按通知核对" /></label>
+          <label>举证期限 <input data-field="evidenceDeadline" placeholder="以举证通知书为准" /></label>
+        </div>
+      </section>
 
-        <section id="service-delivery" class="panel printable">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">新增事项</p>
-              <h2>法院电子送达事项</h2>
-            </div>
-            <button type="button" class="secondary no-print" data-print-section="service-delivery">打印本节</button>
+      <section id="service-delivery" class="card panel printable" data-step-card="2">
+        <div class="card-head">
+          <div class="card-title-wrap">
+            <p class="card-step">步骤 2</p>
+            <h2>法院电子送达事项</h2>
+            <p class="card-desc">记录短信通知、送达链接与处理进度，便于核对公司名称与提交材料。</p>
           </div>
-          <div class="form-grid">
-            <label>
-              短信对应案号
-              <input data-field="serviceCaseNo" />
-            </label>
-            <label>
-              法院
-              <input data-field="serviceCourt" />
-            </label>
-            <label>
-              短信中的被送达人名称
-              <input data-field="serviceCompanyName" />
-            </label>
-            <label>
-              收到通知时间
-              <input data-field="serviceReceivedAt" />
-            </label>
-            <label>
-              当前事项
-              <input data-field="serviceMatter" />
-            </label>
-            <label>
-              联系人
-              <input data-field="serviceContacts" />
-            </label>
-            <label>
-              电话
-              <input data-field="servicePhone" />
-            </label>
-            <label>
-              法院地址
-              <input data-field="serviceAddress" />
-            </label>
-            <label>
-              官方入口
-              <input data-field="serviceOfficialEntry" />
-            </label>
-            <label>
-              短信专属查阅链接
-              <input data-field="servicePrivateLink" placeholder="带送达参数，建议只保存在云端，不公开转发" />
-            </label>
-            <label class="full-span">
-              短信内容摘要和处理记录
-              <textarea data-field="serviceNotes" rows="8"></textarea>
-            </label>
-          </div>
-        </section>
+          <button type="button" class="secondary no-print" data-print-section="service-delivery">打印本节</button>
+        </div>
+        <div class="form-grid">
+          <label>短信对应案号 <input data-field="serviceCaseNo" /></label>
+          <label>法院 <input data-field="serviceCourt" /></label>
+          <label>短信中的被送达人名称 <input data-field="serviceCompanyName" /></label>
+          <label>收到通知时间 <input data-field="serviceReceivedAt" /></label>
+          <label>当前事项 <input data-field="serviceMatter" /></label>
+          <label>联系人 <input data-field="serviceContacts" /></label>
+          <label>电话 <input data-field="servicePhone" /></label>
+          <label>法院地址 <input data-field="serviceAddress" /></label>
+          <label>官方入口 <input data-field="serviceOfficialEntry" /></label>
+          <label>短信专属查阅链接 <input data-field="servicePrivateLink" placeholder="带送达参数，建议只保存在云端" /></label>
+          <label class="full-span">短信内容摘要和处理记录 <textarea data-field="serviceNotes" rows="8"></textarea></label>
+        </div>
+      </section>
 
-        <section id="must-have" class="panel printable">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">第二步</p>
-              <h2>开庭必备材料清单</h2>
-            </div>
-            <button type="button" class="secondary no-print" data-print-section="must-have">打印清单</button>
+      <section id="must-have" class="card panel printable" data-step-card="3">
+        <div class="card-head">
+          <div class="card-title-wrap">
+            <p class="card-step">步骤 3</p>
+            <h2>开庭必备材料清单</h2>
+            <p class="card-desc">按分类勾选并标记准备状态，开庭前逐项核对。</p>
           </div>
-          <div class="checklist">
-            <label><input type="checkbox" data-check="verify-company-name" />核对短信中的公司名称是否与营业执照完整名称一致。</label>
-            <label><input type="checkbox" data-check="service-address-form" />填写《广州法院电子送达地址确认书》，并加盖公司公章。</label>
-            <label><input type="checkbox" data-check="submit-service-address" />通过人民法院在线服务提交电子送达地址确认书。</label>
-            <label><input type="checkbox" data-check="call-court" />电话联系海珠法院民四庭，确认原告、案由、送达地址和后续邮寄材料。</label>
-            <label><input type="checkbox" data-check="summons" />法院材料：传票、应诉通知书、举证通知书、起诉状副本、原告证据副本。</label>
-            <label><input type="checkbox" data-check="license" />公司主体材料：营业执照复印件、统一社会信用代码信息、公司盖章页。</label>
-            <label><input type="checkbox" data-check="legal-rep" />法定代表人身份证明书、法定代表人身份证复印件。</label>
-            <label><input type="checkbox" data-check="power" />如非法定代表人本人出庭：授权委托书、代理人身份证明、劳动/律师事务所证明等。</label>
-            <label><input type="checkbox" data-check="defense" />民事答辩状：按原告诉讼请求逐项回应，准备法院及各方份数。</label>
-            <label><input type="checkbox" data-check="evidence-list" />证据目录：证据编号、名称、来源、证明目的、页码一一对应。</label>
-            <label><input type="checkbox" data-check="evidence-copy" />证据复印件/打印件：合同、聊天记录、邮件、转账、发票、后台记录、交付记录。</label>
-            <label><input type="checkbox" data-check="originals" />证据原件或原始载体：合同原件、手机/电脑原始聊天记录、银行流水原件下载渠道。</label>
-            <label><input type="checkbox" data-check="shareholder" />涉及股东责任时：公司财产独立、账户独立、出资、章程、纳税和账簿材料。</label>
-            <label><input type="checkbox" data-check="outline" />庭审提纲：事实争议、法律争议、对对方证据质证意见、调解底线。</label>
-          </div>
-        </section>
+          <button type="button" class="secondary no-print" data-print-section="must-have">打印清单</button>
+        </div>
+        <div id="checklistRoot" class="checklist-groups"></div>
+      </section>
 
-        <section id="evidence" class="panel printable">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">第三步</p>
-              <h2>证据目录</h2>
-            </div>
-            <div class="button-row no-print">
-              <button type="button" class="secondary" id="addEvidence">新增证据</button>
-              <button type="button" class="secondary" data-print-section="evidence">打印目录</button>
-            </div>
+      <section id="evidence" class="card panel printable" data-step-card="4">
+        <div class="card-head">
+          <div class="card-title-wrap">
+            <p class="card-step">步骤 4</p>
+            <h2>证据目录</h2>
+            <p class="card-desc">编号、名称、来源、证明目的与页码一一对应，可上传附件预览。</p>
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>编号</th>
-                  <th>证据名称</th>
-                  <th>来源/原件</th>
-                  <th>证明目的</th>
-                  <th>页码</th>
-                  <th>状态</th>
-                  <th class="no-print">操作</th>
-                </tr>
-              </thead>
-              <tbody id="evidenceBody"></tbody>
-            </table>
+          <div class="card-actions no-print">
+            <button type="button" class="secondary" id="addEvidence">新增证据</button>
+            <button type="button" class="secondary" data-print-section="evidence">打印目录</button>
           </div>
-        </section>
+        </div>
+        <div id="evidenceEmpty" class="empty-guide no-print" hidden></div>
+        <div class="table-wrap" id="evidenceTableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>编号</th>
+                <th>证据名称</th>
+                <th>来源/原件</th>
+                <th>证明目的</th>
+                <th>页码</th>
+                <th>状态</th>
+                <th class="no-print">操作</th>
+              </tr>
+            </thead>
+            <tbody id="evidenceBody"></tbody>
+          </table>
+        </div>
+      </section>
 
-        <section id="timeline" class="panel printable">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">第四步</p>
-              <h2>事实时间线</h2>
-            </div>
-            <div class="button-row no-print">
-              <button type="button" class="secondary" id="addTimeline">新增事件</button>
-              <button type="button" class="secondary" data-print-section="timeline">打印时间线</button>
-            </div>
+      <section id="timeline" class="card panel printable" data-step-card="5">
+        <div class="card-head">
+          <div class="card-title-wrap">
+            <p class="card-step">步骤 5</p>
+            <h2>事实时间线</h2>
+            <p class="card-desc">按时间梳理关键事实，并标注对应证据与争议焦点。</p>
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>日期</th>
-                  <th>事件</th>
-                  <th>对应证据</th>
-                  <th>争议点</th>
-                  <th class="no-print">操作</th>
-                </tr>
-              </thead>
-              <tbody id="timelineBody"></tbody>
-            </table>
+          <div class="card-actions no-print">
+            <button type="button" class="secondary" id="addTimeline">新增事件</button>
+            <button type="button" class="secondary" data-print-section="timeline">打印时间线</button>
           </div>
-        </section>
+        </div>
+        <div id="timelineEmpty" class="empty-guide no-print" hidden></div>
+        <div id="timelineList" class="timeline-list"></div>
+      </section>
 
-        <section id="defense" class="panel printable">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">第五步</p>
-              <h2>答辩和庭审提纲</h2>
-            </div>
-            <button type="button" class="secondary no-print" data-print-section="defense">打印提纲</button>
+      <section id="defense" class="card panel printable" data-step-card="6">
+        <div class="card-head">
+          <div class="card-title-wrap">
+            <p class="card-step">步骤 6</p>
+            <h2>答辩和庭审提纲</h2>
+            <p class="card-desc">庭前整理请求权、答辩观点、质证意见与发言顺序。</p>
           </div>
-          <div class="two-col">
-            <label>
-              原告诉讼请求逐项拆解
-              <textarea data-field="claimsBreakdown" rows="8" placeholder="1. 原告请求金额：&#10;2. 请求依据：&#10;3. 我方认可/不认可部分：&#10;4. 金额计算问题："></textarea>
-            </label>
-            <label>
-              我方核心答辩观点
-              <textarea data-field="defensePoints" rows="8" placeholder="建议围绕：合同是否成立、履行情况、违约事实、损失和因果关系、金额计算、诉讼主体、管辖/时效等。"></textarea>
-            </label>
-            <label>
-              对原告证据的质证意见
-              <textarea data-field="crossExamination" rows="8" placeholder="按证据编号写：真实性、合法性、关联性、证明目的是否成立。"></textarea>
-            </label>
-            <label>
-              庭审发言顺序草稿
-              <textarea data-field="hearingScript" rows="8" placeholder="1. 核对身份；&#10;2. 是否申请回避；&#10;3. 答辩意见；&#10;4. 举证；&#10;5. 质证；&#10;6. 法庭辩论；&#10;7. 最后陈述。"></textarea>
-            </label>
-          </div>
-        </section>
+          <button type="button" class="secondary no-print" data-print-section="defense">打印提纲</button>
+        </div>
+        <p class="hint-banner">内容仅作开庭准备参考，不替代律师意见。</p>
+        <div class="defense-grid">
+          <article class="sub-card">
+            <h3>原告诉讼请求逐项拆解</h3>
+            <textarea data-field="claimsBreakdown" rows="8" placeholder="1. 原告请求金额：&#10;2. 请求依据：&#10;3. 我方认可/不认可部分：&#10;4. 金额计算问题："></textarea>
+          </article>
+          <article class="sub-card">
+            <h3>我方核心答辩观点</h3>
+            <textarea data-field="defensePoints" rows="8" placeholder="合同是否成立、履行情况、违约事实、损失和因果关系、金额计算、诉讼主体、管辖/时效等。"></textarea>
+          </article>
+          <article class="sub-card">
+            <h3>对原告证据的质证意见</h3>
+            <textarea data-field="crossExamination" rows="8" placeholder="按证据编号：真实性、合法性、关联性、证明目的是否成立。"></textarea>
+          </article>
+          <article class="sub-card">
+            <h3>庭审发言顺序草稿</h3>
+            <textarea data-field="hearingScript" rows="8" placeholder="核对身份 → 回避 → 答辩 → 举证 → 质证 → 辩论 → 最后陈述。"></textarea>
+          </article>
+        </div>
+      </section>
 
-        <section id="shareholder" class="panel printable">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">专项风险</p>
-              <h2>99% 股东身份需要单独准备什么</h2>
-            </div>
-            <button type="button" class="secondary no-print" data-print-section="shareholder">打印专项</button>
+      <section id="shareholder" class="card panel printable risk-panel" data-step-card="7">
+        <div class="card-head">
+          <div class="card-title-wrap">
+            <p class="card-step">步骤 7</p>
+            <h2>99% 股东身份专项准备</h2>
+            <p class="card-desc">高持股比例需额外关注诉讼身份、公司独立性与庭上表达边界。</p>
           </div>
-          <div class="risk-grid">
-            <article>
-              <h3>先确认诉讼身份</h3>
-              <p>如果起诉状只列公司为被告，原则上你是代表公司出庭，不当然变成个人被告。如果同时列你个人为被告，需要另准备个人答辩和个人证据。</p>
-            </article>
-            <article>
-              <h3>准备“公司独立”材料</h3>
-              <p>高持股比例容易被对方围绕财产混同、人格混同、抽逃出资、个人收款等发问。建议准备公司账户流水、纳税记录、账簿、章程、出资凭证、对公收付款和发票对应关系。</p>
-            </article>
-            <article>
-              <h3>庭上表达边界</h3>
-              <p>区分“公司行为”和“个人行为”。不要把个人承诺、个人收款、个人聊天表述随意替代公司意思表示；确需说明时，和证据编号对应。</p>
-            </article>
-          </div>
-          <label>
-            我方股东责任专项说明
-            <textarea data-field="shareholderNotes" rows="8" placeholder="记录：是否为一人公司、是否有其他股东、注册资本实缴情况、是否存在个人账户收付款、公司和个人财产如何分离。"></textarea>
-          </label>
-        </section>
+          <button type="button" class="secondary no-print" data-print-section="shareholder">打印专项</button>
+        </div>
+        <div class="risk-alert">
+          <strong>重点提示：</strong>如起诉状同时列个人为被告，应另行准备个人答辩和个人证据。
+        </div>
+        <div class="risk-blocks">
+          <article class="risk-block">
+            <h3>1. 先确认诉讼身份</h3>
+            <p>如果起诉状只列公司为被告，原则上你是代表公司出庭，不当然变成个人被告。如果同时列你个人为被告，需要另准备个人答辩和个人证据。</p>
+          </article>
+          <article class="risk-block">
+            <h3>2. 公司独立材料</h3>
+            <p>高持股比例容易被对方围绕财产混同、人格混同、抽逃出资、个人收款等发问。建议准备公司账户流水、纳税记录、账簿、章程、出资凭证、对公收付款和发票对应关系。</p>
+          </article>
+          <article class="risk-block">
+            <h3>3. 庭上表达边界</h3>
+            <p>区分“公司行为”和“个人行为”。不要把个人承诺、个人收款、个人聊天表述随意替代公司意思表示；确需说明时，和证据编号对应。</p>
+          </article>
+          <article class="risk-block risk-block--fill">
+            <h3>4. 我方股东责任专项说明</h3>
+            <textarea data-field="shareholderNotes" rows="8" placeholder="是否为一人公司、其他股东、注册资本实缴、个人账户收付款、公司和个人财产如何分离。"></textarea>
+          </article>
+        </div>
+      </section>
 
-        <section id="templates" class="panel printable">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">可打印</p>
-              <h2>常用文书模板</h2>
-            </div>
-            <button type="button" class="secondary no-print" data-print-section="templates">打印模板</button>
+      <section id="templates" class="card panel printable" data-step-card="8">
+        <div class="card-head">
+          <div class="card-title-wrap">
+            <p class="card-step">步骤 8</p>
+            <h2>常用文书模板</h2>
+            <p class="card-desc">可直接编辑、复制或单独打印正式文书格式。</p>
           </div>
-          <div class="template-list">
-            <article class="template">
+          <button type="button" class="secondary no-print" data-print-section="templates">打印全部模板</button>
+        </div>
+        <div class="template-list">
+          <article class="template-card printable" data-template-card="defenseTemplate">
+            <div class="template-card-head no-print">
               <h3>民事答辩状（法人/其他组织）</h3>
-              <textarea data-field="defenseTemplate" rows="16">民事答辩状
+              <div class="template-card-actions">
+                <button type="button" class="ghost" data-copy-template="defenseTemplate">复制文本</button>
+                <button type="button" class="secondary" data-print-template="defenseTemplate">打印本模板</button>
+              </div>
+            </div>
+            <h3 class="print-only-template-title">民事答辩状（法人/其他组织）</h3>
+            <textarea data-field="defenseTemplate" rows="16">民事答辩状
 
 答辩人：海南畅核网络科技有限公司
 住所地：
@@ -330,11 +280,18 @@
 答辩人：海南畅核网络科技有限公司（盖章）
 法定代表人/委托诉讼代理人：
 日期：    年  月  日</textarea>
-            </article>
+          </article>
 
-            <article class="template">
+          <article class="template-card printable" data-template-card="legalRepTemplate">
+            <div class="template-card-head no-print">
               <h3>法定代表人身份证明书</h3>
-              <textarea data-field="legalRepTemplate" rows="12">法定代表人身份证明书
+              <div class="template-card-actions">
+                <button type="button" class="ghost" data-copy-template="legalRepTemplate">复制文本</button>
+                <button type="button" class="secondary" data-print-template="legalRepTemplate">打印本模板</button>
+              </div>
+            </div>
+            <h3 class="print-only-template-title">法定代表人身份证明书</h3>
+            <textarea data-field="legalRepTemplate" rows="12">法定代表人身份证明书
 
 海南畅核网络科技有限公司，统一社会信用代码：                  。
 住所地：                  。
@@ -345,11 +302,18 @@
 
 单位：海南畅核网络科技有限公司（盖章）
 日期：    年  月  日</textarea>
-            </article>
+          </article>
 
-            <article class="template">
+          <article class="template-card printable" data-template-card="powerTemplate">
+            <div class="template-card-head no-print">
               <h3>授权委托书（公司委托代理人）</h3>
-              <textarea data-field="powerTemplate" rows="14">授权委托书
+              <div class="template-card-actions">
+                <button type="button" class="ghost" data-copy-template="powerTemplate">复制文本</button>
+                <button type="button" class="secondary" data-print-template="powerTemplate">打印本模板</button>
+              </div>
+            </div>
+            <h3 class="print-only-template-title">授权委托书（公司委托代理人）</h3>
+            <textarea data-field="powerTemplate" rows="14">授权委托书
 
 委托人：海南畅核网络科技有限公司
 住所地：
@@ -365,26 +329,26 @@
 委托人：海南畅核网络科技有限公司（盖章）
 法定代表人：
 日期：    年  月  日</textarea>
-            </article>
-          </div>
-        </section>
+          </article>
+        </div>
+      </section>
 
-        <section id="sources" class="panel">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">核对依据</p>
-              <h2>官方来源和提醒</h2>
-            </div>
+      <section id="sources" class="card panel" data-step-card="9">
+        <div class="card-head">
+          <div class="card-title-wrap">
+            <p class="card-step">参考</p>
+            <h2>官方来源和提醒</h2>
+            <p class="card-desc">样式与法规依据，便于核对文书格式。</p>
           </div>
-          <ul class="source-list">
-            <li><a href="https://www.court.gov.cn/susongyangshi/xiangqing/224.html" target="_blank" rel="noreferrer">最高人民法院：民事答辩状（法人或者其他组织对民事起诉提出答辩用）</a></li>
-            <li><a href="https://www.court.gov.cn/susongyangshi/xiangqing/33.html" target="_blank" rel="noreferrer">最高人民法院：法定代表人身份证明书（法人当事人用）</a></li>
-            <li><a href="https://www.court.gov.cn/susongyangshi/xiangqing/59.html" target="_blank" rel="noreferrer">最高人民法院：授权委托书（法人或者其他组织委托诉讼代理人用）</a></li>
-            <li><a href="https://ipc.court.gov.cn/zh-cn/news/view-393.html" target="_blank" rel="noreferrer">最高人民法院知识产权法庭：民事诉讼证据若干规定（2019 修正）</a></li>
-            <li><a href="https://www.npc.gov.cn/c2/c30834/202312/t20231229_433999.html" target="_blank" rel="noreferrer">中国人大网：中华人民共和国公司法（2023 年修订）</a></li>
-          </ul>
-        </section>
-      </div>
+        </div>
+        <ul class="source-list">
+          <li><a href="https://www.court.gov.cn/susongyangshi/xiangqing/224.html" target="_blank" rel="noreferrer">最高人民法院：民事答辩状（法人或者其他组织对民事起诉提出答辩用）</a></li>
+          <li><a href="https://www.court.gov.cn/susongyangshi/xiangqing/33.html" target="_blank" rel="noreferrer">最高人民法院：法定代表人身份证明书（法人当事人用）</a></li>
+          <li><a href="https://www.court.gov.cn/susongyangshi/xiangqing/59.html" target="_blank" rel="noreferrer">最高人民法院：授权委托书（法人或者其他组织委托诉讼代理人用）</a></li>
+          <li><a href="https://ipc.court.gov.cn/zh-cn/news/view-393.html" target="_blank" rel="noreferrer">最高人民法院知识产权法庭：民事诉讼证据若干规定（2019 修正）</a></li>
+          <li><a href="https://www.npc.gov.cn/c2/c30834/202312/t20231229_433999.html" target="_blank" rel="noreferrer">中国人大网：中华人民共和国公司法（2023 年修订）</a></li>
+        </ul>
+      </section>
     </main>
 
     <div id="previewModal" class="modal no-print" hidden>

@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vercel dev",
-    "check": "node --check app.js && node --check api/case-data.js"
+    "check": "node --check app.js && node --check api/case-data.js",
+    "build": "node --check app.js && node --check api/case-data.js"
   },
   "dependencies": {
     "@vercel/blob": "^2.4.0"
