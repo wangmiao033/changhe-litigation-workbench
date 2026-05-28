@@ -1,4 +1,6 @@
-const STORAGE_KEY = "changhe-hearing-workbench-v1";
+const API_ENDPOINT = "/api/case-data";
+const PASSWORD_KEY = "changhe-case-password";
+const SAVE_DELAY_MS = 900;
 
 const defaults = {
   fields: {
@@ -61,15 +63,16 @@ const defaults = {
   ],
 };
 
-let state = loadState();
-let storageWarningShown = false;
+let state = cloneDefaults();
+let saveTimer = null;
+let isHydrating = false;
+let cloudPassword = readSessionPassword();
 
-function loadState() {
+function readSessionPassword() {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return mergeState(defaults, saved || {});
+    return sessionStorage.getItem(PASSWORD_KEY) || "";
   } catch {
-    return cloneDefaults();
+    return "";
   }
 }
 
@@ -83,22 +86,17 @@ function mergeState(base, saved) {
 }
 
 function saveState() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    if (!storageWarningShown) {
-      storageWarningShown = true;
-      toast("当前浏览器限制了本地保存，请用“导出备份”保存重要内容。");
-    }
-  }
+  if (isHydrating) return;
+  scheduleCloudSave();
 }
 
 function bindFields() {
   document.querySelectorAll("[data-field]").forEach((el) => {
     const key = el.dataset.field;
-    if (Object.prototype.hasOwnProperty.call(state.fields, key)) {
-      el.value = state.fields[key];
+    if (!Object.prototype.hasOwnProperty.call(state.fields, key)) {
+      state.fields[key] = el.value;
     }
+    el.value = state.fields[key] || "";
     el.addEventListener("input", () => {
       state.fields[key] = el.value;
       saveState();
@@ -115,6 +113,24 @@ function bindChecks() {
       saveState();
     });
   });
+}
+
+function hydratePage() {
+  isHydrating = true;
+  document.querySelectorAll("[data-field]").forEach((el) => {
+    const key = el.dataset.field;
+    if (!Object.prototype.hasOwnProperty.call(state.fields, key)) {
+      state.fields[key] = el.value;
+    } else {
+      el.value = state.fields[key] || "";
+    }
+  });
+  document.querySelectorAll("[data-check]").forEach((el) => {
+    el.checked = Boolean(state.checks[el.dataset.check]);
+  });
+  renderEvidence();
+  renderTimeline();
+  isHydrating = false;
 }
 
 function renderEvidence() {
@@ -164,6 +180,29 @@ function renderTimeline() {
 }
 
 function bindButtons() {
+  const passwordInput = document.querySelector("#cloudPassword");
+  passwordInput.value = cloudPassword;
+  updateCloudStatus(cloudPassword ? "已输入密码，可读取云端资料" : "输入保存密码后连接云端", cloudPassword ? "warn" : "");
+
+  document.querySelector("#unlockCloud").addEventListener("click", () => {
+    cloudPassword = passwordInput.value.trim();
+    storeSessionPassword(cloudPassword);
+    if (!cloudPassword) {
+      updateCloudStatus("请输入网站保存密码", "error");
+      return;
+    }
+    loadCloudState();
+  });
+
+  passwordInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      document.querySelector("#unlockCloud").click();
+    }
+  });
+
+  document.querySelector("#loadCloud").addEventListener("click", loadCloudState);
+  document.querySelector("#saveCloud").addEventListener("click", () => saveCloudState({ immediate: true }));
+
   document.querySelector("#addEvidence").addEventListener("click", () => {
     state.evidence.push({
       no: `证据${state.evidence.length + 1}`,
@@ -215,6 +254,10 @@ function bindButtons() {
   document.querySelector("#importData").addEventListener("change", importData);
   window.addEventListener("beforeprint", expandTextareasForPrint);
   window.addEventListener("afterprint", restoreTextareasAfterPrint);
+
+  if (cloudPassword) {
+    loadCloudState();
+  }
 }
 
 function printOnly(sectionId) {
@@ -230,6 +273,112 @@ function printOnly(sectionId) {
   }, 500);
 }
 
+function scheduleCloudSave() {
+  if (!cloudPassword) {
+    updateCloudStatus("未连接云端：输入保存密码后才会保存", "warn");
+    return;
+  }
+
+  clearTimeout(saveTimer);
+  updateCloudStatus("有修改，准备保存到云端...", "warn");
+  saveTimer = setTimeout(() => saveCloudState(), SAVE_DELAY_MS);
+}
+
+async function loadCloudState() {
+  if (!cloudPassword) {
+    updateCloudStatus("请输入网站保存密码后再读取云端", "error");
+    return;
+  }
+
+  updateCloudStatus("正在读取云端资料...", "warn");
+  try {
+    const result = await requestCloud("GET");
+    if (!result.data) {
+      state = cloneDefaults();
+      hydratePage();
+      updateCloudStatus("云端暂无资料，当前是空白模板", "warn");
+      return;
+    }
+
+    state = mergeState(defaults, result.data.data || result.data);
+    hydratePage();
+    updateCloudStatus(`已读取云端资料${formatSavedAt(result.updatedAt || result.data.savedAt)}`, "ok");
+  } catch (error) {
+    updateCloudStatus(error.message, "error");
+    toast(error.message);
+  }
+}
+
+async function saveCloudState({ immediate = false } = {}) {
+  if (!cloudPassword) {
+    updateCloudStatus("请输入网站保存密码后再保存云端", "error");
+    return;
+  }
+
+  if (immediate) {
+    clearTimeout(saveTimer);
+  }
+
+  updateCloudStatus("正在保存到云端...", "warn");
+  try {
+    const result = await requestCloud("PUT", { data: state });
+    updateCloudStatus(`已保存到云端${formatSavedAt(result.updatedAt)}`, "ok");
+  } catch (error) {
+    updateCloudStatus(error.message, "error");
+    toast(error.message);
+  }
+}
+
+async function requestCloud(method, body) {
+  const response = await fetch(API_ENDPOINT, {
+    method,
+    headers: {
+      "content-type": "application/json",
+      "x-case-password": cloudPassword,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  let result = {};
+  try {
+    result = await response.json();
+  } catch {
+    result = {};
+  }
+
+  if (!response.ok) {
+    throw new Error(result.message || "云端请求失败。");
+  }
+
+  return result;
+}
+
+function updateCloudStatus(message, tone = "") {
+  const node = document.querySelector("#cloudStatus");
+  if (!node) return;
+  node.className = `cloud-status ${tone}`.trim();
+  node.textContent = message;
+}
+
+function storeSessionPassword(value) {
+  try {
+    if (value) {
+      sessionStorage.setItem(PASSWORD_KEY, value);
+    } else {
+      sessionStorage.removeItem(PASSWORD_KEY);
+    }
+  } catch {
+    // If sessionStorage is blocked, the password still works for the current page.
+  }
+}
+
+function formatSavedAt(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return `：${date.toLocaleString("zh-CN")}`;
+}
+
 function exportData() {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -240,7 +389,7 @@ function exportData() {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
-  toast("已导出本地备份。");
+  toast("已导出备份文件。");
 }
 
 function importData(event) {
@@ -250,9 +399,10 @@ function importData(event) {
   reader.onload = () => {
     try {
       const imported = JSON.parse(String(reader.result));
-      state = mergeState(defaults, imported);
-      saveState();
-      location.reload();
+      state = mergeState(defaults, imported.data || imported);
+      hydratePage();
+      saveCloudState({ immediate: true });
+      toast("已导入备份，并尝试保存到云端。");
     } catch {
       toast("导入失败：文件不是有效的 JSON 备份。");
     }

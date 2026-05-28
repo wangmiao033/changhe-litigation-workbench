@@ -89,6 +89,43 @@ select {
   align-items: center;
 }
 
+.actions {
+  justify-content: flex-end;
+  max-width: 640px;
+}
+
+.cloud-login {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.cloud-login input {
+  width: 190px;
+  min-height: 42px;
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.cloud-status {
+  flex-basis: 100%;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 13px;
+  text-align: right;
+}
+
+.cloud-status.ok {
+  color: #d9f99d;
+}
+
+.cloud-status.warn {
+  color: #fde68a;
+}
+
+.cloud-status.error {
+  color: #fecaca;
+}
+
 button,
 .file-button {
   min-height: 42px;
