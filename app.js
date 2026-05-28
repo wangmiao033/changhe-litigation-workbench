@@ -1,5 +1,7 @@
 const API_ENDPOINT = "/api/case-data";
 const SAVE_DELAY_MS = 900;
+const MAX_ATTACHMENT_BYTES = 800 * 1024;
+const MAX_BODY_BYTES = 1024 * 1024;
 
 const defaults = {
   fields: {
@@ -79,11 +81,28 @@ let saveTimer = null;
 let isHydrating = false;
 
 function mergeState(base, saved) {
+  const evidence = Array.isArray(saved.evidence)
+    ? saved.evidence.map(normalizeEvidence)
+    : base.evidence.map(normalizeEvidence);
   return {
     fields: { ...base.fields, ...(saved.fields || {}) },
     checks: { ...base.checks, ...(saved.checks || {}) },
-    evidence: Array.isArray(saved.evidence) ? saved.evidence : base.evidence,
+    evidence,
     timeline: Array.isArray(saved.timeline) ? saved.timeline : base.timeline,
+  };
+}
+
+function normalizeEvidence(item = {}) {
+  return {
+    no: item.no || "",
+    name: item.name || "",
+    source: item.source || "",
+    purpose: item.purpose || "",
+    pages: item.pages || "",
+    status: item.status || "",
+    fileName: item.fileName || "",
+    fileMime: item.fileMime || "",
+    fileData: item.fileData || "",
   };
 }
 
@@ -139,11 +158,27 @@ function renderEvidence() {
   const tbody = document.querySelector("#evidenceBody");
   tbody.innerHTML = "";
   state.evidence.forEach((item, index) => {
+    state.evidence[index] = normalizeEvidence(item);
     const row = document.createElement("tr");
+    const attachmentHtml = item.fileName
+      ? `<button type="button" class="file-chip" data-preview-evidence="${index}" title="点击预览">
+          <span>📎</span><span>${escapeText(item.fileName)}</span>
+        </button>
+        <button type="button" class="icon-btn secondary" data-remove-file="${index}" title="移除附件">移除</button>`
+      : "";
     row.innerHTML = `
       <td><input aria-label="证据编号" data-key="no" value="${escapeAttr(item.no)}" /></td>
       <td><textarea aria-label="证据名称" data-key="name">${escapeText(item.name)}</textarea></td>
-      <td><textarea aria-label="来源或原件" data-key="source">${escapeText(item.source)}</textarea></td>
+      <td class="source-cell">
+        <textarea aria-label="来源或原件" data-key="source">${escapeText(item.source)}</textarea>
+        <div class="attachment-row no-print">
+          ${attachmentHtml}
+          <label class="upload-link">
+            ${item.fileName ? "更换文件" : "上传附件"}
+            <input type="file" accept="image/*,.pdf,application/pdf" data-upload-evidence="${index}" />
+          </label>
+        </div>
+      </td>
       <td><textarea aria-label="证明目的" data-key="purpose">${escapeText(item.purpose)}</textarea></td>
       <td><input aria-label="页码" data-key="pages" value="${escapeAttr(item.pages)}" /></td>
       <td><input aria-label="状态" data-key="status" value="${escapeAttr(item.status)}" /></td>
@@ -186,14 +221,12 @@ function bindButtons() {
   document.querySelector("#saveCloud").addEventListener("click", () => saveCloudState({ immediate: true }));
 
   document.querySelector("#addEvidence").addEventListener("click", () => {
-    state.evidence.push({
-      no: `证据${state.evidence.length + 1}`,
-      name: "",
-      source: "",
-      purpose: "",
-      pages: "",
-      status: "待整理",
-    });
+    state.evidence.push(
+      normalizeEvidence({
+        no: `证据${state.evidence.length + 1}`,
+        status: "待整理",
+      }),
+    );
     saveState();
     renderEvidence();
   });
@@ -205,9 +238,14 @@ function bindButtons() {
   });
 
   document.addEventListener("click", (event) => {
-    const evidenceIndex = event.target.dataset.deleteEvidence;
-    const timelineIndex = event.target.dataset.deleteTimeline;
-    const printSection = event.target.dataset.printSection;
+    const target = event.target.closest("[data-delete-evidence], [data-delete-timeline], [data-print-section], [data-preview-evidence], [data-remove-file], [data-close-modal]");
+    if (!target) return;
+
+    const evidenceIndex = target.dataset.deleteEvidence;
+    const timelineIndex = target.dataset.deleteTimeline;
+    const printSection = target.dataset.printSection;
+    const previewIndex = target.dataset.previewEvidence;
+    const removeFileIndex = target.dataset.removeFile;
 
     if (evidenceIndex !== undefined) {
       state.evidence.splice(Number(evidenceIndex), 1);
@@ -221,9 +259,32 @@ function bindButtons() {
       renderTimeline();
     }
 
+    if (previewIndex !== undefined) {
+      openEvidencePreview(Number(previewIndex));
+    }
+
+    if (removeFileIndex !== undefined) {
+      clearEvidenceFile(Number(removeFileIndex));
+    }
+
+    if (target.dataset.closeModal !== undefined) {
+      closePreviewModal();
+    }
+
     if (printSection) {
       printOnly(printSection);
     }
+  });
+
+  document.addEventListener("change", (event) => {
+    const uploadIndex = event.target.dataset?.uploadEvidence;
+    if (uploadIndex === undefined) return;
+    attachEvidenceFile(Number(uploadIndex), event.target.files?.[0]);
+    event.target.value = "";
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closePreviewModal();
   });
 
   document.querySelector("#printAll").addEventListener("click", () => {
@@ -282,6 +343,14 @@ async function loadCloudState() {
 async function saveCloudState({ immediate = false } = {}) {
   if (immediate) {
     clearTimeout(saveTimer);
+  }
+
+  const payloadSize = JSON.stringify(state).length;
+  if (payloadSize > MAX_BODY_BYTES) {
+    const message = `资料体积过大（约 ${formatFileSize(payloadSize)}），请减少附件数量或体积后再保存。`;
+    updateCloudStatus(message, "error");
+    toast(message);
+    return;
   }
 
   updateCloudStatus("正在保存...", "warn");
@@ -401,8 +470,130 @@ function cloneDefaults() {
   return JSON.parse(JSON.stringify(defaults));
 }
 
+function attachEvidenceFile(index, file) {
+  if (!file) return;
+  if (file.size > MAX_ATTACHMENT_BYTES) {
+    toast(`文件过大（${formatFileSize(file.size)}），请控制在 ${formatFileSize(MAX_ATTACHMENT_BYTES)} 以内。`);
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const item = normalizeEvidence(state.evidence[index] || {});
+    item.fileName = file.name;
+    item.fileMime = file.type || guessMimeFromName(file.name);
+    item.fileData = String(reader.result || "");
+    if (!item.source.trim()) {
+      item.source = file.name;
+    }
+    state.evidence[index] = item;
+    saveState();
+    renderEvidence();
+    toast("附件已添加，点击文件名可预览。");
+  };
+  reader.onerror = () => toast("读取文件失败，请重试。");
+  reader.readAsDataURL(file);
+}
+
+function clearEvidenceFile(index) {
+  const item = normalizeEvidence(state.evidence[index] || {});
+  item.fileName = "";
+  item.fileMime = "";
+  item.fileData = "";
+  state.evidence[index] = item;
+  saveState();
+  renderEvidence();
+}
+
+function openEvidencePreview(index) {
+  const item = normalizeEvidence(state.evidence[index]);
+  if (!item.fileData) {
+    toast("该条证据尚未上传附件。");
+    return;
+  }
+
+  const modal = document.querySelector("#previewModal");
+  const title = document.querySelector("#previewTitle");
+  const body = document.querySelector("#previewBody");
+  if (!modal || !title || !body) return;
+
+  title.textContent = item.fileName || item.name || item.no || "证据预览";
+  body.innerHTML = "";
+
+  const mime = item.fileMime || guessMimeFromName(item.fileName);
+  if (mime.startsWith("image/")) {
+    const img = document.createElement("img");
+    img.src = item.fileData;
+    img.alt = item.fileName || "证据图片";
+    body.appendChild(img);
+  } else if (mime === "application/pdf" || item.fileName.toLowerCase().endsWith(".pdf")) {
+    const iframe = document.createElement("iframe");
+    iframe.title = item.fileName || "PDF 预览";
+    iframe.src = item.fileData;
+    body.appendChild(iframe);
+  } else {
+    const p = document.createElement("p");
+    p.className = "modal-fallback";
+    p.textContent = "该格式暂不支持在线预览，请下载备份后本地打开。";
+    body.appendChild(p);
+    const link = document.createElement("a");
+    link.href = item.fileData;
+    link.download = item.fileName || "证据附件";
+    link.textContent = "下载附件";
+    link.style.marginTop = "12px";
+    link.style.display = "inline-block";
+    body.appendChild(link);
+  }
+
+  modal.hidden = false;
+  document.body.style.overflow = "hidden";
+}
+
+function closePreviewModal() {
+  const modal = document.querySelector("#previewModal");
+  const body = document.querySelector("#previewBody");
+  if (!modal) return;
+  modal.hidden = true;
+  document.body.style.overflow = "";
+  if (body) body.innerHTML = "";
+}
+
+function guessMimeFromName(name = "") {
+  const lower = name.toLowerCase();
+  if (lower.endsWith(".pdf")) return "application/pdf";
+  if (lower.endsWith(".png")) return "image/png";
+  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+  if (lower.endsWith(".webp")) return "image/webp";
+  if (lower.endsWith(".gif")) return "image/gif";
+  return "application/octet-stream";
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function bindSidebarNav() {
+  const links = [...document.querySelectorAll(".sidebar a")];
+  const setActive = () => {
+    const hash = window.location.hash || "#case-info";
+    links.forEach((link) => {
+      link.classList.toggle("is-active", link.getAttribute("href") === hash);
+    });
+  };
+  links.forEach((link) => {
+    link.addEventListener("click", () => {
+      setTimeout(setActive, 0);
+    });
+  });
+  window.addEventListener("hashchange", setActive);
+  setActive();
+}
+
 bindFields();
 bindChecks();
 renderEvidence();
 renderTimeline();
 bindButtons();
+bindSidebarNav();
